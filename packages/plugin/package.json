@@ -1,7 +1,14 @@
 {
   "name": "dsh-deepseek-web",
-  "description": "DeepSeek Web LLM provider plugin for DeepSeek Harness",
+  "description": "Unofficial DeepSeek Web LLM provider plugin for DeepSeek Harness. Lives in packages/plugin of the public workspace; npm tarball ships built lib/ and prebuilt WASM.",
   "version": "1.0.1",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "cordis-plugin",
+    "llm-provider"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/y-wi/dsh-deepseek-web.git"
@@ -12,6 +19,9 @@
   },
   "license": "MIT",
   "type": "module",
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  },
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "bin": {
@@ -48,6 +58,8 @@
     "prepublishOnly": "pnpm run typecheck && pnpm test && pnpm run build"
   },
   "dsh": {
+    "plugin": true,
+    "kind": "server",
     "bundle": {
       "patch": "./cordis.patch.yml"
     },
@@ -60,6 +72,24 @@
       ],
       "platform": "web"
     }
+  },
+  "disclosure": {
+    "cloud": true,
+    "network": ["https://chat.deepseek.com"],
+    "offlineMode": false,
+    "apiKeys": [
+      {
+        "env": "DEEPSEEK_WEB_TOKEN",
+        "storage": "dsh-credentials"
+      }
+    ],
+    "permissions": {
+      "network": ["chat.deepseek.com"],
+      "filesystem": ["plugin-isolated-browser-profile"],
+      "env": ["DEEPSEEK_WEB_TOKEN"]
+    },
+    "jurisdiction": ["PIPL(CN)"],
+    "retention": "session"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
