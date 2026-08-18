@@ -1,7 +1,7 @@
 {
-  "name": "dsh-deepseek-web-public-workspace",
+  "name": "dsh-deepseek-web",
   "private": true,
-  "description": "Public pnpm workspace for dsh-deepseek-web. Not the npm package: the Cordis plugin is packages/plugin (name dsh-deepseek-web). Git does not ship packages/plugin/lib; npm pack and pnpm build produce it.",
+  "description": "Public pnpm workspace for the dsh-deepseek-web Cordis plugin (the installable package is packages/plugin). Git does not ship packages/plugin/lib; npm pack and pnpm build produce it.",
   "version": "1.0.1",
   "repository": {
     "type": "git",
