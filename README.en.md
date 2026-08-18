@@ -14,7 +14,9 @@
 <p>
   <img src="docs/assets/overview.png" alt="Architecture overview: browser login, DSH tool calls, session replay, and a prebuilt WASM core" width="920">
 </p>
-<p><sub>Open TypeScript integration layer plus a precompiled WASM protocol core. Login, tool execution, and policy stay in DeepSeek Harness.</sub></p>
+
+**Open TypeScript integration layer** · precompiled WASM protocol core  
+Login, tool execution, and policy stay in DeepSeek Harness.
 
 </div>
 
@@ -32,9 +34,7 @@ This project is **not affiliated with or endorsed by DeepSeek**. Users sign in w
   <img src="docs/assets/showcase-session.png" alt="DeepSeek Web session: DeepThink plans a directory listing, then DSH Glob runs" width="880">
 </p>
 
-<p align="center"><sub>
-The user asks what is in the workspace. DeepThink is planning only; <code>Glob</code> is executed by DeepSeek Harness. The plugin translates model output into tool requests and <strong>never</strong> runs the filesystem itself.
-</sub></p>
+**Session and tool calls.** The user asks what is in the workspace. DeepThink is planning only; `Glob` is executed by DeepSeek Harness. The plugin translates model output into tool requests and **never** runs the filesystem itself.
 
 ### Model and DeepThink
 
@@ -42,9 +42,7 @@ The user asks what is in the workspace. DeepThink is planning only; <code>Glob</
   <img src="docs/assets/showcase-composer.png" alt="Composer: DeepSeek Web Expert with DeepThink reasoning" width="720">
 </p>
 
-<p align="center"><sub>
-The composer switches <code>DeepSeek Web</code> / <code>DeepSeek Web Expert</code> and the DeepThink reasoning level. The footer reports turn timing and time-to-first-token.
-</sub></p>
+**Composer.** Switch `DeepSeek Web` / `DeepSeek Web Expert` and the DeepThink reasoning level. The footer reports turn timing and time-to-first-token.
 
 ### Isolated browser login
 
@@ -52,9 +50,7 @@ The composer switches <code>DeepSeek Web</code> / <code>DeepSeek Web Expert</cod
   <img src="docs/assets/showcase-settings.png" alt="Settings: isolated browser login, status, and diagnostics" width="880">
 </p>
 
-<p align="center"><sub>
-Settings signs in to <code>chat.deepseek.com</code> with a dedicated browser profile, not everyday Chrome or Edge. Status, reconnect, logout, and PoW diagnostics live here. Credentials stay in DSH storage.
-</sub></p>
+**Settings.** Sign in to `chat.deepseek.com` with a dedicated browser profile, not everyday Chrome or Edge. Status, reconnect, logout, and PoW diagnostics live here. Credentials stay in DSH storage.
 
 ## Capabilities
 

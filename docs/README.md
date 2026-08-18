@@ -14,7 +14,9 @@
 <p>
   <img src="docs/assets/overview.png" alt="dsh-deepseek-web 架构总览：浏览器登录、DSH 工具调用、会话回放与预构建 WASM 核心" width="920">
 </p>
-<p><sub>开源 TypeScript 集成层 + 预编译 WASM 协议核心。登录、工具执行与策略仍由 DeepSeek Harness 负责。</sub></p>
+
+**开源 TypeScript 集成层** · 预编译 WASM 协议核心  
+登录、工具执行与策略仍由 DeepSeek Harness 负责。
 
 </div>
 
@@ -32,9 +34,7 @@
   <img src="docs/assets/showcase-session.png" alt="DeepSeek Web 会话：DeepThink 规划后由 DSH Glob 列出工作区目录" width="880">
 </p>
 
-<p align="center"><sub>
-用户询问工作区内容。DeepThink 只做规划；<code>Glob</code> 由 DeepSeek Harness 执行。插件把模型输出转成工具请求，<strong>自己不跑</strong>文件系统。
-</sub></p>
+**会话与工具调用。** 用户询问工作区内容。DeepThink 只做规划；`Glob` 由 DeepSeek Harness 执行。插件把模型输出转成工具请求，**自己不跑**文件系统。
 
 ### 模型与 DeepThink
 
@@ -42,9 +42,7 @@
   <img src="docs/assets/showcase-composer.png" alt="输入栏：DeepSeek Web Expert 与 DeepThink 推理等级" width="720">
 </p>
 
-<p align="center"><sub>
-输入栏可切换 <code>DeepSeek Web</code> / <code>DeepSeek Web Expert</code>，以及推理等级 DeepThink。底部为当轮耗时与首 token 延迟，便于对照会话成本。
-</sub></p>
+**输入栏。** 可切换 `DeepSeek Web` / `DeepSeek Web Expert`，以及推理等级 DeepThink。底部为当轮耗时与首 token 延迟，便于对照会话成本。
 
 ### 隔离浏览器登录
 
@@ -52,9 +50,7 @@
   <img src="docs/assets/showcase-settings.png" alt="设置：DeepSeek Web 隔离浏览器登录、状态与诊断" width="880">
 </p>
 
-<p align="center"><sub>
-设置页用独立浏览器登录 <code>chat.deepseek.com</code>，不读取日常 Chrome / Edge 配置。可查看登录状态、重新连接、退出，并运行 PoW 诊断。凭证只保存在 DSH 存储中。
-</sub></p>
+**设置页。** 用独立浏览器登录 `chat.deepseek.com`，不读取日常 Chrome / Edge 配置。可查看登录状态、重新连接、退出，并运行 PoW 诊断。凭证只保存在 DSH 存储中。
 
 ## 能力
 
