@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src/client",
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "lib": ["ES2024", "DOM"],
+    "lib": ["ES2024", "DOM"],
+    "types": []
+  },
+  "include": ["src/client", "src/dsh-peers.d.ts"]
+}

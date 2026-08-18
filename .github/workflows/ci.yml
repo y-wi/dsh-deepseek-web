@@ -1,0 +1,36 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: ['22.19.0', '24']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.7.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      - run: pnpm pack:plugin
+      - name: packed artifact smoke
+        shell: bash
+        run: |
+          test -f packages/plugin/dsh-deepseek-web-1.0.0.tgz
+          tar -tf packages/plugin/dsh-deepseek-web-1.0.0.tgz | grep wasm/deepseek_web_core_bg.wasm
+          tar -tf packages/plugin/dsh-deepseek-web-1.0.0.tgz | grep wasm/protocol-core-manifest.json
+      - name: WASM ABI smoke
+        run: node -e "const fs=require('fs'); const m=JSON.parse(fs.readFileSync('packages/plugin/wasm/protocol-core-manifest.json','utf8')); if (m.abiVersion!==1) process.exit(1)"

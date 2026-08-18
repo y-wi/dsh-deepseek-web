@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "noEmit": true,
+    "types": ["node"],
+    "jsx": "react-jsx",
+    "paths": {
+      "@dsh-deepseek-web/compat": ["../compat/src/index.ts"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["src/client"]
+}

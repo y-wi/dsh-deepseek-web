@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security issue
+    url: https://github.com/y-wi/dsh-deepseek-web/security
+    about: Do not file credentials or auth headers as public issues.

@@ -1,0 +1,21 @@
+{
+  "name": "dsh-deepseek-web-public-workspace",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.7.0",
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  },
+  "scripts": {
+    "typecheck": "pnpm -r typecheck",
+    "test": "vitest run",
+    "build": "pnpm -r build",
+    "check": "pnpm typecheck && pnpm test && pnpm build",
+    "pack:plugin": "pnpm --filter dsh-deepseek-web pack --pack-destination packages/plugin"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.8"
+  }
+}

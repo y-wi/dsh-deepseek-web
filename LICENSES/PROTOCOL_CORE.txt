@@ -1,0 +1,10 @@
+# Protocol compatibility core
+
+This precompiled WebAssembly module is a protocol compatibility component
+for dsh-deepseek-web. It is distributed as a binary alongside the open
+TypeScript integration layer.
+
+It is not encrypted and is not described as reverse-engineering proof.
+
+Unless a more specific notice is included with a given build, the binary
+is provided under the MIT License; see /LICENSE.

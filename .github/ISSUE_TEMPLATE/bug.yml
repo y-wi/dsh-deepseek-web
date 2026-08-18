@@ -1,0 +1,39 @@
+name: Bug report
+description: Report a problem with the DeepSeek Web plugin
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Never paste credentials, cookies, Authorization headers, or browser profiles.
+  - type: input
+    id: plugin
+    attributes:
+      label: Plugin version
+      placeholder: 1.0.0
+    validations:
+      required: true
+  - type: input
+    id: dsh
+    attributes:
+      label: DeepSeek Harness version
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: OS
+      options: [Windows, macOS, Linux]
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser used for sign-in
+  - type: textarea
+    id: error
+    attributes:
+      label: Sanitized error
+      description: Redact tokens, cookies, and account identifiers.
+    validations:
+      required: true
