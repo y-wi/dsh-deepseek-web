@@ -29,8 +29,13 @@ jobs:
       - name: packed artifact smoke
         shell: bash
         run: |
-          test -f packages/plugin/dsh-deepseek-web-1.0.0.tgz
-          tar -tf packages/plugin/dsh-deepseek-web-1.0.0.tgz | grep wasm/deepseek_web_core_bg.wasm
-          tar -tf packages/plugin/dsh-deepseek-web-1.0.0.tgz | grep wasm/protocol-core-manifest.json
+          tgz=$(ls packages/plugin/dsh-deepseek-web-*.tgz | head -n 1)
+          test -f "$tgz"
+          tar -tf "$tgz" | grep wasm/deepseek_web_core_bg.wasm
+          tar -tf "$tgz" | grep wasm/protocol-core-manifest.json
+          if tar -xOf "$tgz" package/package.json | grep -q 'workspace:\*'; then
+            echo 'tarball contains workspace:*' >&2
+            exit 1
+          fi
       - name: WASM ABI smoke
         run: node -e "const fs=require('fs'); const m=JSON.parse(fs.readFileSync('packages/plugin/wasm/protocol-core-manifest.json','utf8')); if (m.abiVersion!==1) process.exit(1)"

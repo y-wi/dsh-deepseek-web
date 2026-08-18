@@ -45,6 +45,49 @@ export function shouldBufferAsToolProtocol(text: string, hasTools: boolean): boo
   return visibleTextBeforeToolProtocol(text, true).length === 0
 }
 
+/** First complete marked tool block, ignoring surrounding natural language. */
+export function extractMarkedToolSlice(content: string): string | undefined {
+  let best: { start: number; slice: string } | undefined
+  for (const [open, close] of MARKED_BLOCKS) {
+    const start = content.indexOf(open)
+    if (start < 0) continue
+    if (insideFence(content, start)) continue
+    const bodyStart = start + open.length
+    const relativeEnd = content.slice(bodyStart).indexOf(close)
+    if (relativeEnd < 0) continue
+    const slice = content.slice(start, bodyStart + relativeEnd + close.length)
+    if (best === undefined || start < best.start) best = { start, slice }
+  }
+  return best?.slice
+}
+
+/**
+ * Answer channel first, then thinking. A well-formed block in DeepThink is
+ * recovered for execution but never shown as reasoning text.
+ */
+export function resolveToolProtocol(
+  channels: { text: string; reasoning?: string },
+  allowedTools: readonly string[],
+  options: { maxBytes: number; maxCalls: number; responseMessageId: string },
+): ParsedToolProtocol {
+  const tryParse = (content: string | undefined): ParsedToolProtocol => {
+    if (content === undefined || content.trim().length === 0) return { kind: 'none' }
+    const strict = parseToolProtocol(content, allowedTools, options)
+    if (strict.kind === 'calls') return strict
+    const slice = extractMarkedToolSlice(content)
+    if (slice !== undefined && slice !== content.trim()) {
+      const extracted = parseToolProtocol(slice, allowedTools, options)
+      if (extracted.kind === 'calls') return extracted
+    }
+    return strict
+  }
+  const fromText = tryParse(channels.text)
+  if (fromText.kind === 'calls') return fromText
+  const fromReasoning = tryParse(channels.reasoning)
+  if (fromReasoning.kind === 'calls') return fromReasoning
+  return fromText.kind !== 'none' ? fromText : fromReasoning
+}
+
 export function visibleTextBeforeToolProtocol(text: string, hasTools: boolean): string {
   if (!hasTools) return text
   let cut = text.length

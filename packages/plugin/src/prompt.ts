@@ -38,7 +38,7 @@ ${conversation}
 </DSH_CONVERSATION>
 ${buildToolContract(input.tools, input.maxCalls)}
 
-Return the next response for the latest user task. If local action is needed, emit one valid <dsh_tool_calls> block and stop; otherwise answer normally.`
+Keep thinking free of tool tags. Return the next answer-channel response for the latest user task. If local action is needed, emit one valid <dsh_tool_calls> block in the answer channel and stop; otherwise answer normally.`
 }
 
 export function buildIncrementalPrompt(input: {
@@ -62,7 +62,7 @@ export function buildIncrementalPrompt(input: {
     input.toolsUpdate ? buildContractUpdate(input.toolsUpdate) : '',
     input.delta.map(formatMessage).join('\n\n'),
     '</DEEPSEEK_WEB_INCREMENTAL_CONTEXT>',
-    'Continue the existing request. If another local operation is required, emit a new tool-call block. Otherwise answer normally.',
+    'Continue the existing request. Keep thinking free of tool tags. If another local operation is required, emit a new tool-call block in the answer channel. Otherwise answer normally.',
   ]
   return parts.filter(Boolean).join('\n')
 }

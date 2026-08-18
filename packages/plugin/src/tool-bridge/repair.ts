@@ -16,12 +16,12 @@ export function promisedToolContinuation(content: string): boolean {
 export function repairPrompt(reason: string): string {
   return `<DSH_TOOL_PROTOCOL_REPAIR>
 The previous reply was not a valid Harness tool protocol: ${reason}
-Emit exactly one un-fenced <dsh_tool_calls> block with valid JSON, or answer the user without claiming a local tool ran.
+Emit exactly one un-fenced <dsh_tool_calls> block with valid JSON in the answer channel (not in thinking), or answer the user without claiming a local tool ran.
 </DSH_TOOL_PROTOCOL_REPAIR>`
 }
 
 export function promisedContinuationPrompt(): string {
   return `<DSH_TOOL_PROTOCOL_REPAIR>
-You promised a local repository/file/shell operation. Either emit a valid <dsh_tool_calls> block now, or answer without claiming the operation happened.
+You promised a local repository/file/shell operation. Either emit a valid <dsh_tool_calls> block in the answer channel now, or answer without claiming the operation happened. Do not put the block in thinking.
 </DSH_TOOL_PROTOCOL_REPAIR>`
 }

@@ -6,8 +6,14 @@ Requires DeepSeek Harness **0.1.0-rc.7** (or compatible), Node `^22.19.0 || >=24
 
 ```bash
 dsh plugin --profile web add dsh-deepseek-web
+dsh plugin --profile web peers check
 dsh web
 ```
+
+Host Cordis, DSH, Schemastery, and React packages are optional peers supplied
+by the DSH profile runtime (`$DSH_HOME/profiles/node_modules`). They are not
+installed as copies under the plugin. Client UI injects are provided by DSH
+ModuleLoader, not by npm peer installation.
 
 Open Settings → DeepSeek Web → Sign in with DeepSeek. A dedicated browser window
 opens. After you log in on chat.deepseek.com, the plugin stores the credential

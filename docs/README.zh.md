@@ -12,6 +12,7 @@
 
 ```bash
 dsh plugin --profile web add dsh-deepseek-web
+dsh plugin --profile web peers check
 dsh web
 ```
 

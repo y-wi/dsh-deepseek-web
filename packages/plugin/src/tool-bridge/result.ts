@@ -59,6 +59,6 @@ ${JSON.stringify({
   })}
 </DSH_LOCAL_TOOL_EXCHANGE>
 Continue using the Harness tool results.
-If another local operation is required, emit a new tool-call block.
+If another local operation is required, emit a new tool-call block in the answer channel, not in thinking.
 Otherwise answer normally.`
 }

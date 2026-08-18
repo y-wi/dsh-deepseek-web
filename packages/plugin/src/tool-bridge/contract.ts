@@ -9,29 +9,23 @@ export function buildToolContract(tools: readonly BridgeToolSchema[], maxCalls: 
   return `
 <DSH_LOCAL_TOOL_CONTRACT version="1">
 DeepSeek Web does not expose native function calling.
-The following capabilities are provided by DeepSeek Harness.
-When a local operation is required, output exactly one un-fenced block as the first non-whitespace content and stop:
-<dsh_tool_calls>
-{
-  "version": 1,
-  "calls": [
-    {
-      "name": "shell",
-      "arguments": {
-        "command": "rg --files"
-      }
-    }
-  ]
-}
-</dsh_tool_calls>
+Harness tools are requested only on the answer channel.
+
+CHANNELS:
+- thinking / DeepThink: natural-language planning only. Never emit tool tags, JSON call objects, executable command payloads, or a draft of the answer-channel block.
+- answer: if a local operation is required, emit exactly one un-fenced block and stop. Otherwise answer the user.
+
+Answer-channel schema (never copy this into thinking):
+<dsh_tool_calls>{"version":1,"calls":[{"name":"TOOL_NAME","arguments":{}}]}</dsh_tool_calls>
 Rules:
-- no text before the block
-- no text after the block
+- tool tags belong only in the answer channel
+- when calling tools, no user-visible text before or after the block
 - use only listed tools
 - arguments must be a JSON object
 - max ${maxCalls} calls
 - never claim execution before Harness returns results
 - do not emit <ds_local_tool_calls>, <invoke>, or DSML; those are parsed only as a compatibility fallback
+- the runtime strips tool tags from thinking so they never appear in the Think UI
 Available tools:
 ${JSON.stringify(tools)}
 </DSH_LOCAL_TOOL_CONTRACT>`

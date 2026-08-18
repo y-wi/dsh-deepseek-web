@@ -31,11 +31,11 @@ import {
   type LiveRemoteCursor,
 } from './replay.ts'
 import {
-  parseToolProtocol,
   promisedContinuationPrompt,
   promisedToolContinuation,
   projectToolResult,
   repairPrompt,
+  resolveToolProtocol,
   visibleTextBeforeToolProtocol,
   toBridgeTools,
   type BridgeToolCall,
@@ -123,6 +123,8 @@ class StreamSink {
   private reasoningIndex: number | undefined
   private textIndex: number | undefined
   private reasoning = ''
+  private rawReasoning = ''
+  private reasoningFed = 0
   private rawText = ''
   private fed = 0
   private visibleEmitted = false
@@ -143,9 +145,15 @@ class StreamSink {
     this.receivedDelta = true
     this.citations = delta.citations
     if (delta.reasoning.length > 0) {
-      this.ensure('reasoning')
-      this.reasoning += delta.reasoning
-      this.emit({ type: 'reasoning-delta', index: this.reasoningIndex!, text: delta.reasoning })
+      this.rawReasoning += delta.reasoning
+      const visibleReasoning = visibleTextBeforeToolProtocol(this.rawReasoning, this.hasTools)
+      const unfedReasoning = visibleReasoning.slice(this.reasoningFed)
+      this.reasoningFed = visibleReasoning.length
+      if (unfedReasoning.length > 0) {
+        this.ensure('reasoning')
+        this.reasoning += unfedReasoning
+        this.emit({ type: 'reasoning-delta', index: this.reasoningIndex!, text: unfedReasoning })
+      }
     }
     if (delta.text.length > 0) this.rawText += delta.text
     const visiblePrefix = visibleTextBeforeToolProtocol(this.rawText, this.hasTools)
@@ -166,6 +174,8 @@ class StreamSink {
   resetBufferedText(): void {
     this.rawText = ''
     this.fed = 0
+    this.rawReasoning = this.reasoning
+    this.reasoningFed = this.reasoning.length
     this.citations = []
     this.gate = new CitationStreamGate()
   }
@@ -498,17 +508,18 @@ export class DeepSeekWebAdapter extends LlmAdapter {
         powHeader,
       })
       powHeader = undefined
-      const parsed = parseToolProtocol(turn.text, input.tools, {
+      const parsed = resolveToolProtocol({ text: turn.text, reasoning: turn.reasoning }, input.tools, {
         maxBytes: input.config.maxToolProtocolBytes,
         maxCalls: input.config.maxToolCallsPerTurn,
         responseMessageId: turn.responseMessageId,
       })
       if (parsed.kind === 'calls') return { turn: { ...turn, text: '' }, calls: parsed.calls }
       if (parsed.kind === 'none') {
+        const promisedSource = turn.text.trim().length > 0 ? turn.text : turn.reasoning
         if (
           !input.sink.streamedVisible
           && input.tools.length > 0
-          && promisedToolContinuation(turn.text)
+          && promisedToolContinuation(promisedSource)
           && attempt < input.config.maxProtocolRepairAttempts
         ) {
           input.sink.resetBufferedText()
