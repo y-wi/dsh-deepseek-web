@@ -22,7 +22,9 @@ Login, tool execution, and policy stay in DeepSeek Harness.
 
 ---
 
-Unofficial provider. This repository publishes the Harness **integration and transport** layer. Protocol compatibility ships as precompiled WebAssembly. To build your own agent host, see [AIFLUXON](https://github.com/aifluxon/aifluxon): an embeddable agent runtime, Rust-first with Python bindings, covering streaming, tools, approvals, sessions, cancellation, and budgets for AI apps, coding agents, CLIs, and custom hosts.
+Unofficial provider. This repository publishes the Harness **integration and transport** layer. Protocol compatibility ships as precompiled WebAssembly.
+
+***Want to quickly build an agent of your own? Try [AIFLUXON](https://github.com/aifluxon/aifluxon): an embeddable Agent runtime, Rust-first with Python bindings, covering streaming, tools, approvals, sessions, cancellation, and budgets for AI apps, coding agents, CLIs, and custom hosts.***
 
 This project is **not affiliated with or endorsed by DeepSeek**. Users sign in with their own account. The plugin does not bypass CAPTCHA, WAF, or account controls; interactive challenges complete in an isolated browser window.
 
