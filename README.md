@@ -16,19 +16,23 @@
 </p>
 
 **开源 TypeScript 集成层** · 预编译 WASM 协议核心  
-登录、工具执行与策略仍由 DeepSeek Harness 负责。
+
+<h3>
+请严格遵循相关使用政策，禁止将此项目用于反代等破坏系统正常运行的行为，仅限个人学习使用
+</h3>
 
 </div>
 
 ---
 
 非官方 Provider。本仓库开放 Harness **集成层与传输层**；协议兼容由随包分发的预编译 WebAssembly 提供。
+本项目与 DeepSeek **无隶属或背书关系**。使用你自己的 DeepSeek 账号。插件不会绕过 CAPTCHA、WAF 或账号访问控制；交互式验证在隔离浏览器窗口中完成。
+
 
 <h3>
 <em>想快速构建一个属于你的智能体？试试 <a href="https://github.com/aifluxon/aifluxon">AIFLUXON</a>：可嵌入的 Agent runtime，Rust 优先并提供 Python 绑定，统一处理流式输出、工具、审批、会话、取消与预算，适合 AI 应用、编码智能体、CLI 与自定义 Host。</em>
 </h3>
 
-本项目与 DeepSeek **无隶属或背书关系**。使用你自己的 DeepSeek 账号。插件不会绕过 CAPTCHA、WAF 或账号访问控制；交互式验证在隔离浏览器窗口中完成。
 
 ## 界面一览
 
