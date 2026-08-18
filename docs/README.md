@@ -1,5 +1,11 @@
 # dsh-deepseek-web
 
+[English](./README.md) · [中文](./README.zh.md)
+
+<p align="center">
+  <img src="docs/assets/overview.png" alt="dsh-deepseek-web: connect DeepSeek Web to DeepSeek Harness" width="100%">
+</p>
+
 An unofficial DeepSeek Web provider for DeepSeek Harness.
 
 This repository contains the open DeepSeek Harness integration and transport
