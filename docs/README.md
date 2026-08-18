@@ -2,7 +2,7 @@
 
 # dsh-deepseek-web
 
-**将 DeepSeek Web 网页端接入 DeepSeek Harness**
+**将 DeepSeek 网页端接入 DeepSeek Harness**
 
 [English](./README.en.md) · [中文](./README.md) · [安装](./INSTALL.md) · [npm](https://www.npmjs.com/package/dsh-deepseek-web)
 
