@@ -7,7 +7,9 @@ Web account. Opening a row creates or reuses a normal Harness session.
 ## Continue vs Fork
 
 - Opening a Web conversation continues **that same** remote conversation when
-  replay metadata is still valid (same account, model, and history prefix).
+replay metadata is still valid (same account, model, and history prefix).
+The popover auto-refresh pauses after you scroll-load extra pages, so it
+cannot reset the list while you are at the bottom.
 - **Fork to Workspace** sits next to Harness's native branch control. It copies
   history through that turn into a workspace you choose (DeepSeek Chat is listed
   first). It works on any finalized assistant message, not only DeepSeek Web

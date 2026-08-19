@@ -10,7 +10,6 @@
 [![release](https://img.shields.io/github/v/release/y-wi/dsh-deepseek-web?color=0f172a)](https://github.com/y-wi/dsh-deepseek-web/releases)
 [![license](https://img.shields.io/github/license/y-wi/dsh-deepseek-web?color=334155)](./LICENSE)
 [![node](https://img.shields.io/node/v/dsh-deepseek-web?color=1e293b)](https://nodejs.org)
-[![dshfind](https://dshfind.com/api/badge/y-wi/dsh-deepseek-web?lang=zh)](https://dshfind.com/zh/plugins/y-wi/dsh-deepseek-web?ref=badge)
 
 <p>
   <img src="docs/assets/overview.png" alt="dsh-deepseek-web 架构总览：浏览器登录、DSH 工具调用、会话回放与预构建 WASM 核心" width="920">
@@ -34,54 +33,6 @@
 
 本项目与 DeepSeek **无隶属或背书关系**。使用你自己的 DeepSeek 账号。插件不会绕过 CAPTCHA、WAF 或账号访问控制；交互式验证在隔离浏览器窗口中完成。
 
-
-## 界面一览
-
-### 会话、推理与工具
-
-<p align="center">
-  <img src="docs/assets/showcase-session.png" alt="DeepSeek Web 会话：DeepThink 规划后由 DSH Glob 列出工作区目录" width="880">
-</p>
-
-**会话与工具调用。** 用户询问工作区内容。DeepThink 只做规划；`Glob` 由 DeepSeek Harness 执行。插件把模型输出转成工具请求，**自己不跑**文件系统。
-
-### 模型与 DeepThink
-
-<p align="center">
-  <img src="docs/assets/showcase-composer.png" alt="输入栏：DeepSeek Web Expert 与 DeepThink 推理等级" width="720">
-</p>
-
-**输入栏。** 可切换 `DeepSeek Web` / `DeepSeek Web Expert`，以及推理等级 DeepThink。底部为当轮耗时与首 token 延迟，便于对照会话成本。
-
-### 隔离浏览器登录
-
-<p align="center">
-  <img src="docs/assets/showcase-settings.png" alt="设置：DeepSeek Web 隔离浏览器登录、状态与诊断" width="880">
-</p>
-
-**设置页。** 用独立浏览器登录 `chat.deepseek.com`，不读取日常 Chrome / Edge 配置。可查看登录状态、重新连接、退出，并运行 PoW 诊断。凭证只保存在 DSH 存储中。
-
-## 能力
-
-| 能力 | 说明 |
-| --- | --- |
-| 浏览器登录 | 隔离 `--user-data-dir`，不碰日常浏览器 profile |
-| DSH 原生工具 | 文本工具桥 → `ToolCallBlock`；FS / Shell / MCP / 审批由 Harness 执行 |
-| 会话回放 | 在 DSH 会话中续聊并重建远端上下文 |
-| 网页会话 | 侧栏浮层列出 DeepSeek Web 会话；派生到工作区后独立续聊 |
-| 网页搜索 | `default` 始终开启官方 Web Search；Expert 不能搜；不是 DSH `web_search` |
-| `/clean` | 会话开关：打开后只发送用户原文 |
-| 预构建 WASM | 安装无需 Rust / wasm-pack；token 与 cookie **不进入** WASM |
-
-## 架构
-
-| 层 | 职责 |
-| --- | --- |
-| TypeScript 开源层 | HTTP、SSE、浏览器登录、凭证、DSH 适配器、工具桥、回放 |
-| 预编译 WASM 核心 | 协议兼容与 PoW |
-
-DeepSeek Web 没有官方 function calling。插件只解析模型输出；适配器**从不**执行 shell、读盘或 MCP。
-
 ## 安装
 
 需要 DeepSeek Harness **0.1.0-rc.7**（或兼容版本），Node `^22.19.0 || >=24.0.0`。
@@ -93,10 +44,6 @@ dsh web
 ```
 
 设置 → DeepSeek Web → Sign in with DeepSeek。确认 Provider `deepseek-web` 出现，模型 `default` / `expert` 可见。
-
-登录后，侧栏底部的 **DeepSeek Web 会话** 会以小浮层列出网页端会话。点选后在正常的 Harness 会话界面中打开；replay 有效时会续写原来的网页会话。导入时只保留用户原文。助手消息上的 **派生到工作区** 会在所选工作区创建独立会话。
-
-详见 [docs/remote-sessions.md](./docs/remote-sessions.md)。
 
 DSH / Cordis / React 由运行时 `$DSH_HOME/profiles/node_modules` 提供，不会在插件目录再装一份。
 
@@ -123,6 +70,72 @@ dsh plugin --profile web exec dsh-deepseek-web login --token-stdin
 完整说明见 [INSTALL.md](./INSTALL.md)。
 
 </details>
+
+## 能力
+
+<table>
+<tr>
+<td valign="top" width="50%">
+<img src="docs/assets/showcase-session.png" alt="DeepSeek Web 会话：DeepThink 规划后由 DSH Glob 列出工作区目录" width="420">
+<p><b>会话与工具调用。</b> DeepThink 只做规划；<code>Glob</code> 由 DeepSeek Harness 执行。插件把模型输出转成工具请求，自己不跑文件系统。</p>
+</td>
+<td valign="top" width="50%">
+<img src="docs/assets/showcase-settings.png" alt="设置：DeepSeek Web 隔离浏览器登录、状态与诊断" width="420">
+<p><b>隔离浏览器登录。</b> 用独立浏览器登录 <code>chat.deepseek.com</code>，不读取日常 Chrome / Edge 配置。凭证只保存在 DSH 存储中。</p>
+</td>
+</tr>
+<tr>
+<td valign="top" width="50%">
+<img src="docs/assets/showcase-composer.png" alt="输入栏：DeepSeek Web 与 DeepThink 推理等级" width="420">
+<p><b>模型与 DeepThink。</b> 可切换 <code>DeepSeek Web</code> / <code>DeepSeek Web Expert</code>，以及推理等级。底部为当轮耗时与首 token 延迟。</p>
+</td>
+<td valign="top" width="50%">
+<img src="docs/assets/showcase-clean.png" alt="斜杠命令 /clean：只发送用户原文" width="420">
+<p><b><code>/clean</code>。</b> 会话开关。打开后后续每一轮只发送你的原文（不含系统提示、工具、skills）。再执行一次关闭。</p>
+</td>
+</tr>
+<tr>
+<td valign="top" width="50%">
+<img src="docs/assets/showcase-web-sessions.png" alt="侧栏浮层列出 DeepSeek Web 网页会话，可刷新与滚动加载" width="360">
+<p><b>网页会话浮层。</b> 侧栏底部列出 chat.deepseek.com 上的会话；点选后在 Harness 里打开，replay 有效时续写原来的网页会话。</p>
+</td>
+<td valign="top" width="50%">
+<img src="docs/assets/showcase-workspace.png" alt="导入后的会话落在 DeepSeek Chat 工作区" width="360">
+<p><b>DeepSeek Chat 工作区。</b> 打开的网页会话落在插件数据目录对应的工作区，可按 Harness 会话列表继续浏览。</p>
+</td>
+</tr>
+<tr>
+<td valign="top" width="50%">
+<img src="docs/assets/showcase-fork.png" alt="助手消息上的派生到工作区操作" width="420">
+<p><b>派生到工作区。</b> 在已完成的助手消息上，把历史裁到该轮，复制到你选择的工作区。</p>
+</td>
+<td valign="top" width="50%">
+<img src="docs/assets/showcase-fork-picker.png" alt="派生到工作区时选择目标工作区；回答中带网页搜索引用" width="420">
+<p><b>独立续聊与网页搜索。</b> 派生后的会话不写回原来的网页会话。<code>default</code> 始终开启官方 Web Search，引用来源出现在时间线上。</p>
+</td>
+</tr>
+</table>
+
+| 能力 | 说明 |
+| --- | --- |
+| 浏览器登录 | 隔离 `--user-data-dir`，不碰日常浏览器 profile |
+| DSH 原生工具 | 文本工具桥 → `ToolCallBlock`；FS / Shell / MCP / 审批由 Harness 执行 |
+| 会话回放 | 在 DSH 会话中续聊并重建远端上下文 |
+| 网页会话 | 侧栏浮层列出 DeepSeek Web 会话；派生到工作区后独立续聊 |
+| 网页搜索 | `default` 始终开启官方 Web Search；Expert 不能搜；不是 DSH `web_search` |
+| `/clean` | 会话开关：打开后只发送用户原文 |
+| 预构建 WASM | 安装无需 Rust / wasm-pack；token 与 cookie **不进入** WASM |
+
+导入时只保留用户原文。详见 [docs/remote-sessions.md](./docs/remote-sessions.md)。
+
+## 架构
+
+| 层 | 职责 |
+| --- | --- |
+| TypeScript 开源层 | HTTP、SSE、浏览器登录、凭证、DSH 适配器、工具桥、回放 |
+| 预编译 WASM 核心 | 协议兼容与 PoW |
+
+DeepSeek Web 没有官方 function calling。插件只解析模型输出；适配器**从不**执行 shell、读盘或 MCP。
 
 ## 模型
 

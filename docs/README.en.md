@@ -33,54 +33,6 @@ Unofficial provider. This repository publishes the Harness **integration and tra
 
 This project is **not affiliated with or endorsed by DeepSeek**. Users sign in with their own account. The plugin does not bypass CAPTCHA, WAF, or account controls; interactive challenges complete in an isolated browser window.
 
-
-## Screenshots
-
-### Session, reasoning, and tools
-
-<p align="center">
-  <img src="docs/assets/showcase-session.png" alt="DeepSeek Web session: DeepThink plans a directory listing, then DSH Glob runs" width="880">
-</p>
-
-**Session and tool calls.** The user asks what is in the workspace. DeepThink is planning only; `Glob` is executed by DeepSeek Harness. The plugin translates model output into tool requests and **never** runs the filesystem itself.
-
-### Model and DeepThink
-
-<p align="center">
-  <img src="docs/assets/showcase-composer.png" alt="Composer: DeepSeek Web Expert with DeepThink reasoning" width="720">
-</p>
-
-**Composer.** Switch `DeepSeek Web` / `DeepSeek Web Expert` and the DeepThink reasoning level. The footer reports turn timing and time-to-first-token.
-
-### Isolated browser login
-
-<p align="center">
-  <img src="docs/assets/showcase-settings.png" alt="Settings: isolated browser login, status, and diagnostics" width="880">
-</p>
-
-**Settings.** Sign in to `chat.deepseek.com` with a dedicated browser profile, not everyday Chrome or Edge. Status, reconnect, logout, and PoW diagnostics live here. Credentials stay in DSH storage.
-
-## Capabilities
-
-| Capability | Detail |
-| --- | --- |
-| Browser login | Isolated `--user-data-dir`; never the everyday browser profile |
-| Native DSH tools | Text tool bridge → `ToolCallBlock`; FS / Shell / MCP / approval run in Harness |
-| Session replay | Continue a DSH session and rebuild remote context |
-| Web conversations | Sidebar popover lists DeepSeek Web chats; Fork to Workspace is independent |
-| Native search | Always on for `default`; Expert cannot search; not a DSH `web_search` provider |
-| `/clean` | Session toggle: later turns send only the human text |
-| Prebuilt WASM | No Rust / wasm-pack on install; tokens and cookies **never enter** WASM |
-
-## Architecture
-
-| Layer | Responsibility |
-| --- | --- |
-| Open TypeScript layer | HTTP, SSE, browser login, credentials, DSH adapter, tool bridge, replay |
-| Precompiled WASM core | Protocol compatibility and PoW |
-
-DeepSeek Web has no official function calling. The plugin only parses model output. The adapter **never** executes shell, filesystem, or MCP.
-
 ## Install
 
 Requires DeepSeek Harness **0.1.0-rc.7** (or compatible) and Node `^22.19.0 || >=24.0.0`.
@@ -92,10 +44,6 @@ dsh web
 ```
 
 Settings → DeepSeek Web → Sign in with DeepSeek. Confirm provider `deepseek-web` and models `default` / `expert`.
-
-After sign-in, the sidebar footer action **DeepSeek Web chats** lists Web conversations in a compact popover. Opening a row uses the normal Harness conversation UI and continues the original Web conversation when replay is valid. Imported user turns keep only the human text (`<user>` payloads). **Fork to Workspace** on a finalized assistant message creates an independent session in a chosen workspace.
-
-See [docs/remote-sessions.md](./docs/remote-sessions.md).
 
 DSH / Cordis / React come from `$DSH_HOME/profiles/node_modules`. They are not duplicated under the plugin package.
 
@@ -122,6 +70,72 @@ dsh plugin --profile web exec dsh-deepseek-web login --token-stdin
 See [INSTALL.md](./INSTALL.md) for the full notes.
 
 </details>
+
+## Capabilities
+
+<table>
+<tr>
+<td valign="top" width="50%">
+<img src="docs/assets/showcase-session.png" alt="DeepSeek Web session: DeepThink plans a directory listing, then DSH Glob runs" width="420">
+<p><b>Session and tool calls.</b> DeepThink is planning only; <code>Glob</code> is executed by DeepSeek Harness. The plugin translates model output into tool requests and never runs the filesystem itself.</p>
+</td>
+<td valign="top" width="50%">
+<img src="docs/assets/showcase-settings.png" alt="Settings: isolated browser login, status, and diagnostics" width="420">
+<p><b>Isolated browser login.</b> Sign in to <code>chat.deepseek.com</code> with a dedicated browser profile, not everyday Chrome or Edge. Credentials stay in DSH storage.</p>
+</td>
+</tr>
+<tr>
+<td valign="top" width="50%">
+<img src="docs/assets/showcase-composer.png" alt="Composer: DeepSeek Web with DeepThink reasoning" width="420">
+<p><b>Model and DeepThink.</b> Switch <code>DeepSeek Web</code> / <code>DeepSeek Web Expert</code> and the DeepThink reasoning level. The footer reports turn timing and time-to-first-token.</p>
+</td>
+<td valign="top" width="50%">
+<img src="docs/assets/showcase-clean.png" alt="Slash command /clean: send only the human text" width="420">
+<p><b><code>/clean</code>.</b> Session toggle. While on, later turns send only your text — no system prompt, tools, or skills. Run it again to turn it off.</p>
+</td>
+</tr>
+<tr>
+<td valign="top" width="50%">
+<img src="docs/assets/showcase-web-sessions.png" alt="Sidebar popover of DeepSeek Web chats with refresh and scrolling" width="360">
+<p><b>Web conversation popover.</b> The sidebar footer lists chats from chat.deepseek.com. Opening a row uses the normal Harness UI and continues the original Web conversation when replay is valid.</p>
+</td>
+<td valign="top" width="50%">
+<img src="docs/assets/showcase-workspace.png" alt="Imported chats land in the DeepSeek Chat workspace" width="360">
+<p><b>DeepSeek Chat workspace.</b> Opened Web conversations land in the plugin data workspace and show up in the Harness session list.</p>
+</td>
+</tr>
+<tr>
+<td valign="top" width="50%">
+<img src="docs/assets/showcase-fork.png" alt="Fork to Workspace action on a finalized assistant message" width="420">
+<p><b>Fork to Workspace.</b> On a finalized assistant message, copy history through that turn into a workspace you choose.</p>
+</td>
+<td valign="top" width="50%">
+<img src="docs/assets/showcase-fork-picker.png" alt="Workspace picker for Fork to Workspace; answer includes native search citations" width="420">
+<p><b>Independent continuation and native search.</b> Later replies on a fork do not write into the original Web conversation. Native Web Search stays on for <code>default</code>; citations appear on the timeline.</p>
+</td>
+</tr>
+</table>
+
+| Capability | Detail |
+| --- | --- |
+| Browser login | Isolated `--user-data-dir`; never the everyday browser profile |
+| Native DSH tools | Text tool bridge → `ToolCallBlock`; FS / Shell / MCP / approval run in Harness |
+| Session replay | Continue a DSH session and rebuild remote context |
+| Web conversations | Sidebar popover lists DeepSeek Web chats; Fork to Workspace is independent |
+| Native search | Always on for `default`; Expert cannot search; not a DSH `web_search` provider |
+| `/clean` | Session toggle: later turns send only the human text |
+| Prebuilt WASM | No Rust / wasm-pack on install; tokens and cookies **never enter** WASM |
+
+Imported user turns keep only the human text. See [docs/remote-sessions.md](./docs/remote-sessions.md).
+
+## Architecture
+
+| Layer | Responsibility |
+| --- | --- |
+| Open TypeScript layer | HTTP, SSE, browser login, credentials, DSH adapter, tool bridge, replay |
+| Precompiled WASM core | Protocol compatibility and PoW |
+
+DeepSeek Web has no official function calling. The plugin only parses model output. The adapter **never** executes shell, filesystem, or MCP.
 
 ## Models
 

@@ -90,6 +90,8 @@ export class RemoteSessionsController {
   private loginAbort: AbortController | undefined
   private syncTimer: ReturnType<typeof setTimeout> | undefined
   private syncing = false
+  /** True after a successful cursor page. Auto-refresh must not wipe those rows. */
+  private pagedBeyondFirst = false
   private readonly listeners = new Set<() => void>()
   private state: RemoteSessionsState = { phase: 'idle', items: [] }
   private readonly autoRefreshMinMs: number
@@ -165,6 +167,7 @@ export class RemoteSessionsController {
   }
 
   async refresh(): Promise<void> {
+    this.pagedBeyondFirst = false
     await this.load({ refresh: true })
   }
 
@@ -227,11 +230,18 @@ export class RemoteSessionsController {
     }, wait)
   }
 
+  private shouldSkipAutoRefresh(): boolean {
+    return this.pagedBeyondFirst
+      || this.inflight !== undefined
+      || this.loginAbort !== undefined
+      || this.state.phase === 'loading'
+      || this.state.phase === 'loading-more'
+  }
+
   private async tickBackgroundSync(): Promise<void> {
     if (!this.syncing) return
-    if (this.inflight === undefined && this.loginAbort === undefined
-      && this.state.phase !== 'loading' && this.state.phase !== 'loading-more') {
-      await this.load({ refresh: true })
+    if (!this.shouldSkipAutoRefresh()) {
+      await this.load({ refresh: true, source: 'auto' })
     }
     this.armBackgroundSync()
   }
@@ -253,7 +263,8 @@ export class RemoteSessionsController {
     return false
   }
 
-  private async load(options: { refresh?: boolean; cursor?: string }): Promise<void> {
+  private async load(options: { refresh?: boolean; cursor?: string; source?: 'auto' }): Promise<void> {
+    if (options.source === 'auto' && this.shouldSkipAutoRefresh()) return
     const gen = ++this.generation
     this.inflight?.abort()
     const controller = new AbortController()
@@ -271,6 +282,7 @@ export class RemoteSessionsController {
       const status = await this.api.status(controller.signal)
       if (gen !== this.generation) return
       if (status.status !== 'signed-in') {
+        this.pagedBeyondFirst = false
         this.emit({ phase: 'signed-out', items: [] })
         return
       }
@@ -281,6 +293,7 @@ export class RemoteSessionsController {
       })
       if (gen !== this.generation) return
       const items = options.cursor === undefined ? page.items : mergeItems(kept, page.items)
+      if (options.cursor !== undefined) this.pagedBeyondFirst = true
       this.emit({ phase: 'ready', items, nextCursor: page.nextCursor })
     } catch (error) {
       if (gen !== this.generation || controller.signal.aborted) return
