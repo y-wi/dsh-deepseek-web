@@ -10,6 +10,7 @@
 [![release](https://img.shields.io/github/v/release/y-wi/dsh-deepseek-web?color=0f172a)](https://github.com/y-wi/dsh-deepseek-web/releases)
 [![license](https://img.shields.io/github/license/y-wi/dsh-deepseek-web?color=334155)](./LICENSE)
 [![node](https://img.shields.io/node/v/dsh-deepseek-web?color=1e293b)](https://nodejs.org)
+[![dshfind](https://dshfind.com/api/badge/y-wi/dsh-deepseek-web?lang=zh)](https://dshfind.com/zh/plugins/y-wi/dsh-deepseek-web?ref=badge)
 
 <p>
   <img src="docs/assets/overview.png" alt="dsh-deepseek-web 架构总览：浏览器登录、DSH 工具调用、会话回放与预构建 WASM 核心" width="920">
