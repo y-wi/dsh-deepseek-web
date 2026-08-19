@@ -31,8 +31,8 @@ jobs:
         run: |
           tgz=$(ls packages/plugin/dsh-deepseek-web-*.tgz | head -n 1)
           test -f "$tgz"
-          tar -tf "$tgz" | grep wasm/deepseek_web_core_bg.wasm
-          tar -tf "$tgz" | grep wasm/protocol-core-manifest.json
+          tar -tf "$tgz" | grep -F 'package/wasm/deepseek_web_core_bg.wasm'
+          tar -tf "$tgz" | grep -F 'package/wasm/protocol-core-manifest.json'
           if tar -xOf "$tgz" package/package.json | grep -q 'workspace:\*'; then
             echo 'tarball contains workspace:*' >&2
             exit 1
