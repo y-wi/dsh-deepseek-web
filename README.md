@@ -77,7 +77,7 @@ dsh plugin --profile web exec dsh-deepseek-web login --token-stdin
 <tr>
 <td valign="top" width="50%">
 <img src="docs/assets/showcase-session.png" alt="DeepSeek Web 会话：DeepThink 规划后由 DSH Glob 列出工作区目录" width="420">
-<p><b>会话与工具调用。</b> DeepThink 只做规划；<code>Glob</code> 由 DeepSeek Harness 执行。插件把模型输出转成工具请求，自己不跑文件系统。</p>
+<p><b>会话与工具调用。</b> 将DeepSeek网页端接入harness；<code>Glob</code> 插件会把模型输出转成工具请求，完成Agent操作。</p>
 </td>
 <td valign="top" width="50%">
 <img src="docs/assets/showcase-settings.png" alt="设置：DeepSeek Web 隔离浏览器登录、状态与诊断" width="420">
@@ -97,7 +97,7 @@ dsh plugin --profile web exec dsh-deepseek-web login --token-stdin
 <tr>
 <td valign="top" width="50%">
 <img src="docs/assets/showcase-web-sessions.png" alt="侧栏浮层列出 DeepSeek Web 网页会话，可刷新与滚动加载" width="360">
-<p><b>网页会话浮层。</b> 侧栏底部列出 chat.deepseek.com 上的会话；点选后在 Harness 里打开，replay 有效时续写原来的网页会话。</p>
+<p><b>网页会话浮层。</b> 侧栏底部列出 DeepSeek 网页端上的会话；点选后在 Harness 里打开，replay 有效时续写原来的网页会话。</p>
 </td>
 <td valign="top" width="50%">
 <img src="docs/assets/showcase-workspace.png" alt="导入后的会话落在 DeepSeek Chat 工作区" width="360">
@@ -107,11 +107,11 @@ dsh plugin --profile web exec dsh-deepseek-web login --token-stdin
 <tr>
 <td valign="top" width="50%">
 <img src="docs/assets/showcase-fork.png" alt="助手消息上的派生到工作区操作" width="420">
-<p><b>派生到工作区。</b> 在已完成的助手消息上，把历史裁到该轮，复制到你选择的工作区。</p>
+<p><b>派生到工作区。</b> 把DeepSeek网页端的会话派生至工作区</p>
 </td>
 <td valign="top" width="50%">
 <img src="docs/assets/showcase-fork-picker.png" alt="派生到工作区时选择目标工作区；回答中带网页搜索引用" width="420">
-<p><b>独立续聊与网页搜索。</b> 派生后的会话不写回原来的网页会话。<code>default</code> 始终开启官方 Web Search，引用来源出现在时间线上。</p>
+<p><b>独立续聊与网页搜索。</b> 有接续聊天的能力，可以配合code>/clean</code>指令实现网页端聊天的效果，同时始终开启官方网页端的 Web Search能力</p>
 </td>
 </tr>
 </table>
@@ -122,7 +122,7 @@ dsh plugin --profile web exec dsh-deepseek-web login --token-stdin
 | DSH 原生工具 | 文本工具桥 → `ToolCallBlock`；FS / Shell / MCP / 审批由 Harness 执行 |
 | 会话回放 | 在 DSH 会话中续聊并重建远端上下文 |
 | 网页会话 | 侧栏浮层列出 DeepSeek Web 会话；派生到工作区后独立续聊 |
-| 网页搜索 | `default` 始终开启官方 Web Search；Expert 不能搜；不是 DSH `web_search` |
+| 网页搜索 | 始终开启官方网页端 Web Search；Expert 不能搜；不是 DSH `web_search` |
 | `/clean` | 会话开关：打开后只发送用户原文 |
 | 预构建 WASM | 安装无需 Rust / wasm-pack；token 与 cookie **不进入** WASM |
 
