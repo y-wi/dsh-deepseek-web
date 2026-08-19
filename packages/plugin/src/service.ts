@@ -34,6 +34,10 @@ export class DeepSeekWebService {
     return this.auth.status()
   }
 
+  resolveToken(): Promise<string | undefined> {
+    return this.options.resolveCredential()
+  }
+
   login(options?: { resetProfile?: boolean }): Promise<BrowserAuthState> {
     const browser = this.options.config().browser
     return this.auth.signIn({

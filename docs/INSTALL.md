@@ -25,6 +25,13 @@ Check:
 - models `default` and `expert` are visible
 - auth status returns public state only (no token)
 
+After sign-in, the sidebar footer action **DeepSeek Web chats** lists Web
+conversations. **Fork to Workspace** on a finalized assistant message creates
+an independent Harness session in a chosen workspace. `/clean [message]` is a
+session toggle: while on, later turns send only your text. Details:
+[docs/remote-sessions.md](./docs/remote-sessions.md) (public README tree) or the
+repository `docs/remote-sessions.md`.
+
 ## TUI
 
 ```bash

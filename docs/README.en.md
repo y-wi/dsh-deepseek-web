@@ -67,6 +67,9 @@ This project is **not affiliated with or endorsed by DeepSeek**. Users sign in w
 | Browser login | Isolated `--user-data-dir`; never the everyday browser profile |
 | Native DSH tools | Text tool bridge → `ToolCallBlock`; FS / Shell / MCP / approval run in Harness |
 | Session replay | Continue a DSH session and rebuild remote context |
+| Web conversations | Sidebar popover lists DeepSeek Web chats; Fork to Workspace is independent |
+| Native search | Always on for `default`; Expert cannot search; not a DSH `web_search` provider |
+| `/clean` | Session toggle: later turns send only the human text |
 | Prebuilt WASM | No Rust / wasm-pack on install; tokens and cookies **never enter** WASM |
 
 ## Architecture
@@ -89,6 +92,10 @@ dsh web
 ```
 
 Settings → DeepSeek Web → Sign in with DeepSeek. Confirm provider `deepseek-web` and models `default` / `expert`.
+
+After sign-in, the sidebar footer action **DeepSeek Web chats** lists Web conversations in a compact popover. Opening a row uses the normal Harness conversation UI and continues the original Web conversation when replay is valid. Imported user turns keep only the human text (`<user>` payloads). **Fork to Workspace** on a finalized assistant message creates an independent session in a chosen workspace.
+
+See [docs/remote-sessions.md](./docs/remote-sessions.md).
 
 DSH / Cordis / React come from `$DSH_HOME/profiles/node_modules`. They are not duplicated under the plugin package.
 
@@ -123,7 +130,19 @@ See [INSTALL.md](./INSTALL.md) for the full notes.
 | `deepseek-web/default` | DeepSeek Web |
 | `deepseek-web/expert` | DeepSeek Web Expert |
 
-Thinking is `on` / `off`. Native web search is off by default. Input modalities are **text-only**.
+Thinking is `on` / `off`. Native web search is the official Web Search button.
+It stays **on** for every `default` turn, including continuations and `/clean`,
+and cannot be turned off in plugin settings. Expert cannot search on the wire.
+Citations are mapped onto the timeline; this is not a DSH `web_search` provider.
+Input modalities are **text-only**.
+
+## Commands
+
+Slash commands are not sent to the model as `/…` text.
+
+- `/deepseek-web [status|login|logout|doctor]` — account helpers
+- `/clean [message]` — session toggle. While on, later turns send only your
+  text (no system prompt, tools, or skills). Run `/clean` again to turn it off.
 
 ## Safety
 

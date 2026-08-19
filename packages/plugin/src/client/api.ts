@@ -3,6 +3,32 @@ export const LOGIN_PATH = '/plugins/dsh-deepseek-web/auth/login'
 export const CANCEL_PATH = '/plugins/dsh-deepseek-web/auth/cancel'
 export const LOGOUT_PATH = '/plugins/dsh-deepseek-web/auth/logout'
 export const DOCTOR_PATH = '/plugins/dsh-deepseek-web/doctor'
+export const SESSIONS_PATH = '/plugins/dsh-deepseek-web/sessions'
+export const FORK_PATH = '/plugins/dsh-deepseek-web/fork'
+
+export class PluginApiError extends Error {
+  readonly code?: string
+  readonly status: number
+  constructor(message: string, status: number, code?: string) {
+    super(message)
+    this.name = 'PluginApiError'
+    this.status = status
+    this.code = code
+  }
+}
+
+export function sessionsListPath(options?: { cursor?: string; limit?: number; refresh?: boolean }): string {
+  const params = new URLSearchParams()
+  if (options?.cursor) params.set('cursor', options.cursor)
+  if (options?.limit !== undefined) params.set('limit', String(options.limit))
+  if (options?.refresh === true) params.set('refresh', '1')
+  const query = params.toString()
+  return query.length === 0 ? SESSIONS_PATH : `${SESSIONS_PATH}?${query}`
+}
+
+export function materializePath(chatSessionId: string): string {
+  return `${SESSIONS_PATH}/${encodeURIComponent(chatSessionId)}/materialize`
+}
 
 export async function pluginFetch(path: string, init?: RequestInit): Promise<unknown> {
   const headers = new Headers(init?.headers)
@@ -15,12 +41,16 @@ export async function pluginFetch(path: string, init?: RequestInit): Promise<unk
     try {
       body = JSON.parse(text) as unknown
     } catch {
-      throw new Error(`DeepSeek Web ${path} returned ${response.status}`)
+      throw new PluginApiError(`DeepSeek Web ${path} returned ${response.status}`, response.status)
     }
   }
   if (!response.ok) {
-    const error = (body as { error?: string } | null)?.error
-    throw new Error(error ?? `DeepSeek Web ${path} returned ${response.status}`)
+    const record = body as { error?: string; code?: string } | null
+    throw new PluginApiError(
+      record?.error ?? `DeepSeek Web ${path} returned ${response.status}`,
+      response.status,
+      record?.code,
+    )
   }
   return body
 }

@@ -1,3 +1,5 @@
+import { mkdir } from 'node:fs/promises'
+import { join } from 'node:path'
 import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { LlmError } from '@deepseek-ai/dsh-llm'
@@ -7,6 +9,16 @@ import { installSettingsSection, settingsNamespace } from '@deepseek-ai/dsh-sett
 import { CompatDeepSeekWebClient, ERROR_CODES } from '@dsh-deepseek-web/compat'
 import { DeepSeekWebAdapter } from './adapter.ts'
 import { registerAuthRoutes } from './auth-routes.ts'
+import { registerSessionRoutes } from './session-routes.ts'
+import { RemoteSessionService } from './remote-session-service.ts'
+import { ensureDeepSeekChatWorkspace } from './deepseek-chat-workspace.ts'
+import type {
+  AgentPresetsLike,
+  AgentRegistryLike,
+  SessionPersistenceLike,
+  SessionStoreLike,
+  WorkspaceRegistryLike,
+} from './dsh-session.ts'
 import { registerCommands } from './commands.ts'
 import {
   DEFAULT_CONFIG,
@@ -26,7 +38,6 @@ export const Config = z.object({
   tokenEnv: z.string().role('credential-ref').default(DEFAULT_CONFIG.tokenEnv),
   defaultModel: z.union(['default', 'expert']).default('default'),
   thinking: z.union(['enabled', 'disabled']).default('enabled'),
-  nativeSearch: z.union(['off', 'on']).default('off'),
   streamIdleTimeoutMs: z.number(),
   maxToolProtocolBytes: z.number(),
   maxToolCallsPerTurn: z.number(),
@@ -97,6 +108,7 @@ export function apply(ctx: Context, config: Config): void {
 
   const client = new CompatDeepSeekWebClient()
   const adapter = new DeepSeekWebAdapter({ options, resolveCredential, client })
+  let remoteSessions: RemoteSessionService | undefined
   ctx.llm.registerConfigurableProviders([
     { provider: PROVIDER, displayName: 'DeepSeek Web', settingsNs: NS, settingsPath: [] },
   ])
@@ -118,12 +130,51 @@ export function apply(ctx: Context, config: Config): void {
       return { accountHash: account.accountHash }
     },
     config: options,
-    onSignOut: () => adapter.clearAccountCache(),
+    onSignOut: () => {
+      adapter.clearAccountCache()
+      remoteSessions?.clear()
+    },
   })
   ctx.provide('deepSeekWeb', service)
+  const mirrorCwd = (): string => join(resolveDshHome(), 'deepseek-web', 'workspace')
+  remoteSessions = new RemoteSessionService({
+    auth: service,
+    client,
+    persistence: () => ctx.get('sessionPersistence') as SessionPersistenceLike | undefined,
+    workspaces: () => ctx.get('workspaceRegistry') as WorkspaceRegistryLike | undefined,
+    agents: () => ctx.get('agents') as AgentRegistryLike | undefined,
+    sessions: () => ctx.get('sessions') as SessionStoreLike | undefined,
+    agentPresets: () => ctx.get('agentPresets') as AgentPresetsLike | undefined,
+    home: () => resolveDshHome(),
+    cwd: mirrorCwd,
+    ensureCwd: async path => {
+      await mkdir(path, { recursive: true })
+    },
+  })
+
+  ctx.inject(['workspaceRegistry'], injected => {
+    injected.effect(() => {
+      void ensureDeepSeekChatWorkspace({
+        home: resolveDshHome(),
+        workspaces: injected.get('workspaceRegistry') as WorkspaceRegistryLike | undefined,
+      }).catch(error => {
+        injected.logger.error('dsh-deepseek-web: DeepSeek Chat workspace')
+        injected.logger.error(error)
+      })
+      return () => undefined
+    }, 'dsh-deepseek-web: DeepSeek Chat workspace')
+  })
 
   ctx.inject(['webServer'], injected => {
-    injected.effect(() => registerAuthRoutes(injected.webServer, service), 'dsh-deepseek-web: auth routes')
+    injected.effect(() => {
+      const auth = registerAuthRoutes(injected.webServer, service)
+      const sessions = registerSessionRoutes(injected.webServer, remoteSessions!)
+      return () => {
+        auth()
+        sessions()
+        remoteSessions?.clear()
+      }
+    }, 'dsh-deepseek-web: host routes')
   })
   registerCommands(ctx, service)
 

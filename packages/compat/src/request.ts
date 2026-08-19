@@ -137,7 +137,9 @@ export class DeepSeekWebHttpClient {
           response,
         }
       }
-      const maxBytes = descriptor.responseKind === 'sse' || !response.ok ? MAX_ERROR_BYTES : MAX_JSON_BYTES
+      const maxBytes = descriptor.responseKind === 'sse' || !response.ok
+        ? MAX_ERROR_BYTES
+        : Math.max(1, descriptor.maxResponseBytes || MAX_JSON_BYTES)
       const bytes = await readLimited(response, maxBytes, signal)
       return {
         status: response.status,

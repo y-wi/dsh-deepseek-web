@@ -1,8 +1,8 @@
 import { DeepSeekWebError, ERROR_CODES } from '../errors.ts'
-import type { DeepSeekCitation, DeepSeekTurn, PowChallenge } from '../types.ts'
+import type { DeepSeekCitation, DeepSeekRemoteMessage, DeepSeekRemoteSessionSummary, DeepSeekTurn, PowChallenge } from '../types.ts'
 import { loadWasmNative, type WasmNative, type WasmStreamAssembler } from './native.ts'
 
-export const PROTOCOL_ABI_VERSION = 1
+export const PROTOCOL_ABI_VERSION = 2
 
 export interface ProtocolClientContext {
   locale?: string
@@ -28,6 +28,7 @@ export interface ProtocolRequest {
   responseKind: 'json' | 'sse'
   requiresCredential: boolean
   suggestedUserAgent: string
+  maxResponseBytes: number
 }
 
 export type BuildRequestCommand =
@@ -57,6 +58,19 @@ export type BuildRequestCommand =
     thinking?: boolean
   }
   | { type: 'fetch_attachment'; client?: ProtocolClientContext; fileId: string }
+  | {
+    type: 'list_sessions'
+    client?: ProtocolClientContext
+    cursor?: string
+    limit?: number
+  }
+  | {
+    type: 'fetch_session_history'
+    client?: ProtocolClientContext
+    sessionId: string
+    cursor?: string
+    limit?: number
+  }
 
 export type ProtocolOperation =
   | 'current_user'
@@ -65,6 +79,8 @@ export type ProtocolOperation =
   | 'completion'
   | 'upload_attachment'
   | 'fetch_attachment'
+  | 'list_sessions'
+  | 'fetch_session_history'
 
 export interface ProtocolError {
   code: string
@@ -89,6 +105,17 @@ export type ProtocolResponse =
   }
   | { type: 'attachment'; fileId: string; status: string }
   | { type: 'sse_ready' }
+  | {
+    type: 'session_list'
+    items: DeepSeekRemoteSessionSummary[]
+    nextCursor?: string
+  }
+  | {
+    type: 'session_history'
+    session: DeepSeekRemoteSessionSummary
+    messages: DeepSeekRemoteMessage[]
+    nextCursor?: string
+  }
 
 export interface ParseResponseOutput {
   schemaVersion: number

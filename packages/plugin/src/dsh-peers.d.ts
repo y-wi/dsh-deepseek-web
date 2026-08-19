@@ -11,6 +11,18 @@ declare module '@deepseek-ai/dsh-llm' {
     constructor(message: string, code: string, options?: ErrorOptions)
   }
   export function ReasoningEffortId(id: string): string
+  export function createUserMessage<T extends { content: unknown; source: unknown }>(
+    input: T,
+  ): T & { id: string; role: 'user' }
+  export function createAssistantMessage(input: {
+    content: unknown
+    source: { provider: string; model: string; replayState?: unknown }
+  }): {
+    id: string
+    role: 'assistant'
+    content: unknown
+    source: { kind: 'model'; provider: string; model: string; replayState?: unknown }
+  }
   export interface LlmModelInfo {
     provider: string
     id: string
@@ -103,7 +115,7 @@ declare module '@deepseek-ai/dsh-invariants' {
 }
 
 declare module '@deepseek-ai/dsh-commands' {
-  export type CommandResult = { kind: 'success' | 'error'; text: string }
+  export type CommandResult = { readonly kind: 'success' | 'error'; readonly text?: string }
 }
 
 declare module '@deepseek-ai/dsh-attachment' {
@@ -136,11 +148,36 @@ declare module '@deepseek-ai/dsh-client-runtime/client' {
       inject(name: string, factory: () => unknown): void
       register(slot: unknown, component: unknown): unknown
     }
+    sessions?: HarnessSessionsLike
+    workspaces?: HarnessWorkspacesLike
+  }
+
+  export interface HarnessSessionsLike {
+    open(id: string): void
+    refresh?(): Promise<void>
+    list?: {
+      getSnapshot(): {
+        ids?: string[]
+        byId?: Record<string, unknown>
+        items?: Array<{ id?: string }>
+      }
+      subscribe?(fn: () => void): () => void
+    }
+  }
+
+  export interface HarnessWorkspacesLike {
+    refresh?(): Promise<void>
+    list?: {
+      getSnapshot(): {
+        items?: Array<{ workspaceId?: string; id?: string; title?: string; path?: string }>
+      }
+      subscribe?(fn: () => void): () => void
+    }
   }
 }
 
 declare module '@deepseek-ai/dsh-client-ui-primitives' {
-  import type { ButtonHTMLAttributes, ReactNode } from 'react'
+  import type { ButtonHTMLAttributes, ReactNode, RefObject } from 'react'
   export function Button(props: {
     variant?: 'primary' | 'ghost' | 'outline' | 'toolbar'
     size?: 'md' | 'sm'
@@ -153,9 +190,50 @@ declare module '@deepseek-ai/dsh-client-ui-primitives' {
     size?: number
     className?: string
   }): JSX.Element
+  export function Tooltip(props: {
+    children: JSX.Element
+    label: string
+    side?: 'top' | 'right' | 'bottom' | 'left'
+  }): JSX.Element
+  export function IconFolderOpenOutline16(props?: { size?: number; className?: string }): JSX.Element
+  export function IconQueueOutline14(props?: { size?: number; className?: string }): JSX.Element
+  export function IconRefreshOutline16(props?: { size?: number; className?: string }): JSX.Element
+  export function useDismissOnOutsidePointer(
+    root: RefObject<HTMLElement | null>,
+    open: boolean,
+    setOpen: (open: boolean) => void,
+  ): void
+  export interface MenuItem {
+    id: string
+    label: ReactNode
+    disabled?: boolean
+    danger?: boolean
+    icon?: ReactNode
+  }
+  export type MenuEntry =
+    | MenuItem
+    | { type: 'separator'; id: string }
+    | { type: 'label'; id: string; text: string }
+  export function Menu(props: {
+    open: boolean
+    anchor: ReactNode
+    items: readonly MenuEntry[]
+    footer?: readonly MenuEntry[]
+    selectedId?: string
+    onSelect: (id: string) => void
+    onClose: () => void
+    align?: 'start' | 'end'
+    side?: 'bottom' | 'top' | 'right'
+    portal?: boolean
+    getAnchorRect?: () => DOMRect | null
+    compact?: boolean
+    dense?: boolean
+  }): JSX.Element
 }
 declare module '@deepseek-ai/dsh-client-ui-settings/client' {}
 declare module '@deepseek-ai/dsh-client-locale/client' {}
+declare module '@deepseek-ai/dsh-client-ui-sidebar/client' {}
+declare module '@deepseek-ai/dsh-client-ui-conversation/client' {}
 declare module '@deepseek-ai/dsh-client-ui-slots' {
   export interface LocaleNamespaceMap {}
 }

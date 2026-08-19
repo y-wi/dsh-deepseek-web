@@ -68,6 +68,9 @@
 | 浏览器登录 | 隔离 `--user-data-dir`，不碰日常浏览器 profile |
 | DSH 原生工具 | 文本工具桥 → `ToolCallBlock`；FS / Shell / MCP / 审批由 Harness 执行 |
 | 会话回放 | 在 DSH 会话中续聊并重建远端上下文 |
+| 网页会话 | 侧栏浮层列出 DeepSeek Web 会话；派生到工作区后独立续聊 |
+| 网页搜索 | `default` 始终开启官方 Web Search；Expert 不能搜；不是 DSH `web_search` |
+| `/clean` | 会话开关：打开后只发送用户原文 |
 | 预构建 WASM | 安装无需 Rust / wasm-pack；token 与 cookie **不进入** WASM |
 
 ## 架构
@@ -90,6 +93,10 @@ dsh web
 ```
 
 设置 → DeepSeek Web → Sign in with DeepSeek。确认 Provider `deepseek-web` 出现，模型 `default` / `expert` 可见。
+
+登录后，侧栏底部的 **DeepSeek Web 会话** 会以小浮层列出网页端会话。点选后在正常的 Harness 会话界面中打开；replay 有效时会续写原来的网页会话。导入时只保留用户原文。助手消息上的 **派生到工作区** 会在所选工作区创建独立会话。
+
+详见 [docs/remote-sessions.md](./docs/remote-sessions.md)。
 
 DSH / Cordis / React 由运行时 `$DSH_HOME/profiles/node_modules` 提供，不会在插件目录再装一份。
 
@@ -124,7 +131,14 @@ dsh plugin --profile web exec dsh-deepseek-web login --token-stdin
 | `deepseek-web/default` | DeepSeek Web |
 | `deepseek-web/expert` | DeepSeek Web Expert |
 
-思考为 `on` / `off`。网页原生搜索默认关闭。输入模态目前为**纯文本**。
+思考为 `on` / `off`。网页原生搜索跟随官方 Web Search 开关。`default` 的每一轮（含续写和 `/clean`）都会打开，插件设置里不能关掉。Expert 在协议上不能搜索。引用来源会出现在时间线上；不会注册 DSH `web_search` 提供方。输入模态目前为**纯文本**。
+
+## 命令
+
+斜杠命令不会把 `/…` 原文发给模型。
+
+- `/deepseek-web [status|login|logout|doctor]` — 账号相关
+- `/clean [message]` — 当前会话开关。打开后后续每一轮只发送你的原文（不含系统提示、工具、skills）。再执行一次 `/clean` 关闭。
 
 ## 安全
 

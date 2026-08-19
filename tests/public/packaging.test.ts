@@ -11,7 +11,14 @@ describe('packaging invariants', () => {
       scripts?: Record<string, string>
       files?: string[]
       repository?: { url?: string }
-      dsh?: { client?: { inject?: string[] } }
+      dsh?: {
+        plugin?: boolean
+        kind?: string
+        client?: { inject?: string[] }
+        bundle?: { patch?: string }
+      }
+      disclosure?: { cloud?: boolean; offlineMode?: boolean; network?: string[] }
+      engines?: { node?: string }
     }
     expect(JSON.stringify(pkg.dependencies ?? {})).not.toContain('workspace:')
     expect(pkg.scripts?.postinstall).toBeUndefined()
@@ -39,6 +46,13 @@ describe('packaging invariants', () => {
     for (const name of pkg.dsh?.client?.inject ?? []) {
       expect(pkg.peerDependencies?.[name]).toBeUndefined()
     }
+    expect(pkg.dsh?.plugin).toBe(true)
+    expect(pkg.dsh?.kind).toBe('server')
+    expect(pkg.dsh?.client?.inject).toContain('@deepseek-ai/dsh-client-ui-sidebar')
+    expect(pkg.dsh?.client?.inject).toContain('@deepseek-ai/dsh-client-ui-conversation')
+    expect(pkg.disclosure?.cloud).toBe(true)
+    expect(pkg.disclosure?.offlineMode).toBe(false)
+    expect(pkg.disclosure?.network).toContain('https://chat.deepseek.com')
   })
 })
 

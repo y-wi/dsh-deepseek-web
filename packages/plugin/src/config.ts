@@ -11,6 +11,7 @@ export interface Config {
   tokenEnv?: string
   defaultModel?: ModelId
   thinking?: ThinkingMode
+  /** Always on for default; Expert cannot search on the wire. Settings cannot turn this off. */
   nativeSearch?: NativeSearchMode
   streamIdleTimeoutMs?: number
   maxToolProtocolBytes?: number
@@ -43,7 +44,7 @@ export const DEFAULT_CONFIG: ResolvedConfig = {
   tokenEnv: CREDENTIAL_REF_DEFAULT,
   defaultModel: 'default',
   thinking: 'enabled',
-  nativeSearch: 'off',
+  nativeSearch: 'on',
   streamIdleTimeoutMs: 180_000,
   maxToolProtocolBytes: 128 * 1024,
   maxToolCallsPerTurn: 16,
@@ -55,6 +56,10 @@ export const DEFAULT_CONFIG: ResolvedConfig = {
   },
 }
 
+export function nativeSearchActive(_config: Pick<ResolvedConfig, 'nativeSearch'>, model: string): boolean {
+  return model !== 'expert'
+}
+
 export function resolveConfig(raw: Config = {}): ResolvedConfig {
   const maxToolCallsPerTurn = raw.maxToolCallsPerTurn ?? DEFAULT_CONFIG.maxToolCallsPerTurn
   if (!Number.isInteger(maxToolCallsPerTurn) || maxToolCallsPerTurn < 1 || maxToolCallsPerTurn > 32) {
@@ -64,7 +69,7 @@ export function resolveConfig(raw: Config = {}): ResolvedConfig {
     tokenEnv: raw.tokenEnv ?? DEFAULT_CONFIG.tokenEnv,
     defaultModel: raw.defaultModel ?? DEFAULT_CONFIG.defaultModel,
     thinking: raw.thinking ?? DEFAULT_CONFIG.thinking,
-    nativeSearch: raw.nativeSearch ?? DEFAULT_CONFIG.nativeSearch,
+    nativeSearch: 'on',
     streamIdleTimeoutMs: raw.streamIdleTimeoutMs ?? DEFAULT_CONFIG.streamIdleTimeoutMs,
     maxToolProtocolBytes: raw.maxToolProtocolBytes ?? DEFAULT_CONFIG.maxToolProtocolBytes,
     maxToolCallsPerTurn,

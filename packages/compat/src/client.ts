@@ -3,6 +3,8 @@ import { completeTurn, solveCompletionPow } from './completion.ts'
 import { PowWorkerPool } from './pow/pool.ts'
 import { DeepSeekWebHttpClient } from './request.ts'
 import { createSession } from './session.ts'
+import { listSessions } from './sessions.ts'
+import { fetchSessionHistory } from './history.ts'
 import { uploadAttachment } from './attachments.ts'
 import { loadProtocolCore } from './protocol/core.ts'
 import type {
@@ -11,6 +13,8 @@ import type {
   DeepSeekAttachmentRef,
   DeepSeekAttachmentUpload,
   DeepSeekCompletionRequest,
+  DeepSeekRemoteSessionHistory,
+  DeepSeekRemoteSessionPage,
   DeepSeekSession,
   DeepSeekTurn,
   DeepSeekWebClient,
@@ -54,6 +58,21 @@ export class CompatDeepSeekWebClient implements DeepSeekWebClient {
 
   uploadAttachment(request: DeepSeekAttachmentUpload): Promise<DeepSeekAttachmentRef> {
     return uploadAttachment(this.http, this.pow, request)
+  }
+
+  listSessions(
+    credential: string,
+    options?: { cursor?: string; limit?: number; signal?: AbortSignal },
+  ): Promise<DeepSeekRemoteSessionPage> {
+    return listSessions(this.http, credential, options)
+  }
+
+  fetchSessionHistory(
+    credential: string,
+    chatSessionId: string,
+    options?: { cursor?: string; limit?: number; signal?: AbortSignal },
+  ): Promise<DeepSeekRemoteSessionHistory> {
+    return fetchSessionHistory(this.http, credential, chatSessionId, options)
   }
 
   async dispose(): Promise<void> {

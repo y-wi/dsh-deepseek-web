@@ -3,7 +3,7 @@ import { readFileSync, existsSync } from 'node:fs'
 import { loadProtocolCore, PROTOCOL_ABI_VERSION } from '../../packages/compat/src/protocol/core.ts'
 
 describe('precompiled protocol core', () => {
-  it('loads ABI 1 and matches the manifest hash file', async () => {
+  it('loads matching ABI and matches the manifest hash file', async () => {
     const core = await loadProtocolCore()
     expect(core.abiVersion).toBe(PROTOCOL_ABI_VERSION)
     const manifestPath = new URL('../../packages/plugin/wasm/protocol-core-manifest.json', import.meta.url)
@@ -14,7 +14,7 @@ describe('precompiled protocol core', () => {
       coreVersion?: string
       buildProfile?: string
     }
-    expect(manifest.abiVersion).toBe(1)
+    expect(manifest.abiVersion).toBe(PROTOCOL_ABI_VERSION)
     expect(manifest.sha256).toMatch(/^[a-f0-9]{64}$/)
     expect(manifest.privateCommit).toBeUndefined()
   })

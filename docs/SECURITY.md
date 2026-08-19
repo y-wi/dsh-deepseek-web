@@ -15,3 +15,7 @@ Do not paste into issues, fixtures, or logs:
 - raw browser profiles
 
 Tests use the documented literal `Bearer TEST_ONLY_TOKEN`.
+
+Session list, history, materialize, and Fork stay on the Host. The browser
+client never receives the bearer token, cookies, or raw authentication
+material.

@@ -17,10 +17,12 @@ import type {
   LlmResolvedModelInfo,
   StreamChunk,
 } from '@deepseek-ai/dsh-llm'
-import type { ResolvedConfig } from './config.ts'
+import { nativeSearchActive, PROVIDER, type ResolvedConfig } from './config.ts'
+import { formatSearchTimeline } from './search-timeline.ts'
 import { flattenText, messageHasImage, toolCallBlocks, toolResultFromMessage } from './messages.ts'
 import { resolveSessionTitle } from './title.ts'
-import { buildFullPrompt, buildIncrementalPrompt, type PromptMessage } from './prompt.ts'
+import { buildFullPrompt, buildIncrementalPrompt, extractImportedUserText, filterToolsForNativeSearch, type PromptMessage } from './prompt.ts'
+import { isCleanMode } from './clean-turn.ts'
 import {
   createLiveCursor,
   hashText,
@@ -40,7 +42,6 @@ import {
   toBridgeTools,
   type BridgeToolCall,
 } from './tool-bridge/index.ts'
-import { PROVIDER } from './config.ts'
 
 class AsyncMutex {
   private chain = Promise.resolve()
@@ -129,6 +130,9 @@ class StreamSink {
   private fed = 0
   private visibleEmitted = false
   private receivedDelta = false
+  private reasoningClosed = false
+  private textClosed = false
+  private searchClosed = false
   private gate = new CitationStreamGate()
   private citations: DeepSeekCitation[] = []
 
@@ -161,12 +165,14 @@ class StreamSink {
     this.fed = visiblePrefix.length
     const visible = this.gate.push(unfed, this.citations)
     if (visible.length === 0) return
+    this.maybeEmitSearchCard()
     this.ensure('text')
     this.visibleEmitted = true
     this.emit({ type: 'text-delta', index: this.textIndex!, text: visible })
   }
 
   flushTurn(turn: DeepSeekTurn): void {
+    this.citations = turn.citations
     if (this.receivedDelta) return
     this.push({ reasoning: turn.reasoning, text: turn.text, citations: turn.citations })
   }
@@ -181,6 +187,7 @@ class StreamSink {
   }
 
   finish(calls: BridgeToolCall[], replay: DeepSeekWebReplayV1): void {
+    this.maybeEmitSearchCard()
     if (calls.length > 0) {
       this.closeReasoning()
       this.closeText()
@@ -210,9 +217,22 @@ class StreamSink {
     this.emit({ type: 'finish', reason: { kind: 'stop' } as never, replayState: wrapReplay(replay) })
   }
 
+  private maybeEmitSearchCard(): void {
+    if (this.searchClosed || this.textIndex !== undefined) return
+    const markdown = formatSearchTimeline(this.citations)
+    if (markdown.length === 0) return
+    this.searchClosed = true
+    this.closeReasoning()
+    const index = this.nextIndex
+    this.nextIndex += 1
+    this.emit({ type: 'block-start', index, blockType: 'text' })
+    this.emit({ type: 'text-delta', index, text: markdown })
+    this.emit({ type: 'block-end', index, block: { type: 'text', text: markdown } })
+  }
+
   private ensure(kind: 'reasoning' | 'text'): void {
     if (kind === 'reasoning') {
-      if (this.reasoningIndex !== undefined) return
+      if (this.reasoningIndex !== undefined || this.reasoningClosed) return
       this.reasoningIndex = this.nextIndex
       this.nextIndex += 1
       this.emit({ type: 'block-start', index: this.reasoningIndex, blockType: 'reasoning' })
@@ -225,12 +245,14 @@ class StreamSink {
   }
 
   private closeReasoning(): void {
-    if (this.reasoningIndex === undefined) return
+    if (this.reasoningIndex === undefined || this.reasoningClosed) return
+    this.reasoningClosed = true
     this.emit({ type: 'block-end', index: this.reasoningIndex, block: { type: 'reasoning', text: this.reasoning } })
   }
 
   private closeText(): void {
-    if (this.textIndex === undefined) return
+    if (this.textIndex === undefined || this.textClosed) return
+    this.textClosed = true
     this.emit({ type: 'block-end', index: this.textIndex, block: { type: 'text', text: this.gate.text } })
   }
 }
@@ -380,10 +402,14 @@ export class DeepSeekWebAdapter extends LlmAdapter {
     powHeaderPromise: Promise<string | undefined>,
   ): Promise<void> {
     const model = modelOf(options.model)
-    const tools = toBridgeTools(options.tools ?? [])
-    const sink = new StreamSink(emit, tools.length > 0)
-    const systemHash = hashText(options.system ?? '')
-    const toolsHash = hashText(JSON.stringify(tools))
+    const clean = isCleanMode(options.sessionId)
+    const cleanText = lastHumanUserText(options.messages)
+    const nativeSearch = nativeSearchActive(config, model)
+    const tools = clean ? [] : toBridgeTools(options.tools ?? [])
+    const promptTools = filterToolsForNativeSearch(tools, nativeSearch)
+    const sink = new StreamSink(emit, promptTools.length > 0)
+    const systemHash = hashText(clean ? '' : (options.system ?? ''))
+    const toolsHash = hashText(clean ? '[]' : JSON.stringify(tools))
     const live = options.sessionId === undefined ? undefined : this.remotes.get(options.sessionId)
     const plan = planConversation({
       messages: options.messages,
@@ -402,23 +428,27 @@ export class DeepSeekWebAdapter extends LlmAdapter {
     if (plan.kind === 'continue') {
       chatSessionId = plan.chatSessionId
       parentMessageId = plan.parentMessageId
-      prompt = buildIncrementalPrompt({
-        nativeSearch: config.nativeSearch === 'on',
-        toolsUpdate: plan.contractUpdate?.tools ? tools : undefined,
-        systemUpdate: plan.contractUpdate?.system ? options.system : undefined,
-        delta: toPromptMessages(plan.deltaMessages, config.maxToolResultBytes),
-      })
+      prompt = clean
+        ? cleanText
+        : buildIncrementalPrompt({
+          toolsUpdate: plan.contractUpdate?.tools ? tools : undefined,
+          systemUpdate: plan.contractUpdate?.system ? options.system : undefined,
+          delta: toPromptMessages(plan.deltaMessages, config.maxToolResultBytes),
+          nativeSearch,
+        })
     } else {
       if (options.sessionId !== undefined) this.remotes.delete(options.sessionId)
       const session = await this.client.createSession(credential, options.signal)
       chatSessionId = session.chatSessionId
-      prompt = buildFullPrompt({
-        system: options.system,
-        messages: toPromptMessages(options.messages, config.maxToolResultBytes),
-        tools,
-        nativeSearch: config.nativeSearch === 'on',
-        maxCalls: config.maxToolCallsPerTurn,
-      })
+      prompt = clean
+        ? cleanText
+        : buildFullPrompt({
+          system: options.system,
+          messages: toPromptMessages(options.messages, config.maxToolResultBytes),
+          tools,
+          maxCalls: config.maxToolCallsPerTurn,
+          nativeSearch,
+        })
       rebuilt = plan.kind === 'rebuild'
     }
     try {
@@ -429,9 +459,10 @@ export class DeepSeekWebAdapter extends LlmAdapter {
         prompt,
         modelType: model,
         thinkingEnabled: thinkingEnabled(options, config),
-        searchEnabled: config.nativeSearch === 'on',
+        searchEnabled: nativeSearch,
         signal: options.signal,
-        tools: tools.map(tool => tool.name),
+        tools: promptTools.map(tool => tool.name),
+        nativeSearch,
         config,
         sink,
         powHeader: await powHeaderPromise,
@@ -446,18 +477,21 @@ export class DeepSeekWebAdapter extends LlmAdapter {
         const remote = await this.completeWithRepair({
           credential,
           chatSessionId: session.chatSessionId,
-          prompt: buildFullPrompt({
-            system: options.system,
-            messages: toPromptMessages(options.messages, config.maxToolResultBytes),
-            tools,
-            nativeSearch: config.nativeSearch === 'on',
-            maxCalls: config.maxToolCallsPerTurn,
-          }),
+          prompt: clean
+            ? cleanText
+            : buildFullPrompt({
+              system: options.system,
+              messages: toPromptMessages(options.messages, config.maxToolResultBytes),
+              tools,
+              maxCalls: config.maxToolCallsPerTurn,
+              nativeSearch,
+            }),
           modelType: model,
           thinkingEnabled: thinkingEnabled(options, config),
-          searchEnabled: config.nativeSearch === 'on',
+          searchEnabled: nativeSearch,
           signal: options.signal,
-          tools: tools.map(tool => tool.name),
+          tools: promptTools.map(tool => tool.name),
+          nativeSearch,
           config,
           sink,
         })
@@ -487,6 +521,7 @@ export class DeepSeekWebAdapter extends LlmAdapter {
     searchEnabled: boolean
     signal?: AbortSignal
     tools: string[]
+    nativeSearch: boolean
     config: ResolvedConfig
     sink: StreamSink
     powHeader?: string
@@ -519,12 +554,12 @@ export class DeepSeekWebAdapter extends LlmAdapter {
         if (
           !input.sink.streamedVisible
           && input.tools.length > 0
-          && promisedToolContinuation(promisedSource)
+          && promisedToolContinuation(promisedSource, input.nativeSearch)
           && attempt < input.config.maxProtocolRepairAttempts
         ) {
           input.sink.resetBufferedText()
           parent = turn.responseMessageId
-          prompt = promisedContinuationPrompt()
+          prompt = promisedContinuationPrompt(input.nativeSearch)
           continue
         }
         return { turn, calls: [] }
@@ -532,7 +567,7 @@ export class DeepSeekWebAdapter extends LlmAdapter {
       if (input.sink.streamedVisible) return { turn, calls: [] }
       input.sink.resetBufferedText()
       parent = turn.responseMessageId
-      prompt = repairPrompt(parsed.reason)
+      prompt = repairPrompt(parsed.reason, input.nativeSearch)
     }
     throw new LlmError('DeepSeek Web tool protocol remained invalid', ERROR_CODES.TOOL_PROTOCOL)
   }
@@ -562,7 +597,7 @@ export class DeepSeekWebAdapter extends LlmAdapter {
         systemHash,
         toolsHash,
         thinking: thinkingEnabled(options, config),
-        nativeSearch: config.nativeSearch === 'on',
+        nativeSearch: nativeSearchActive(config, model),
       },
       ...(turn.citations.length > 0 ? { provider: { citations: turn.citations } } : {}),
     }
@@ -616,6 +651,17 @@ function toLlm(error: unknown): LlmError {
   return new LlmError(error instanceof Error ? error.message : String(error), ERROR_CODES.HTTP)
 }
 
+function lastHumanUserText(messages: readonly unknown[]): string {
+  for (let index = messages.length - 1; index >= 0; index--) {
+    const record = messages[index] as { role?: string; source?: { kind?: string }; content?: unknown }
+    if (record.role !== 'user') continue
+    if (record.source?.kind === 'tool' || record.source?.kind === 'plugin') continue
+    const text = extractImportedUserText(flattenText(record.content)).replace(/^USER:\n/, '').trim()
+    if (text.length > 0) return text
+  }
+  return ''
+}
+
 function toPromptMessages(messages: readonly unknown[], maxToolResultBytes: number): PromptMessage[] {
   const out: PromptMessage[] = []
   for (const message of messages) {
@@ -629,7 +675,7 @@ function toPromptMessages(messages: readonly unknown[], maxToolResultBytes: numb
       })
       continue
     }
-    const record = message as { role?: string; content?: unknown }
+    const record = message as { role?: string; content?: unknown; source?: { kind?: string } }
     const calls = toolCallBlocks(record.content).map(call => ({
       id: call.id,
       name: call.name,
@@ -637,6 +683,7 @@ function toPromptMessages(messages: readonly unknown[], maxToolResultBytes: numb
     }))
     out.push({
       role: record.role ?? 'user',
+      sourceKind: record.source?.kind,
       text: flattenText(record.content),
       toolCalls: calls.length > 0 ? calls : undefined,
     })

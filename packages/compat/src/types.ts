@@ -69,6 +69,38 @@ export interface DeepSeekAttachmentRef {
   fileId: string
 }
 
+export interface DeepSeekRemoteSessionSummary {
+  chatSessionId: string
+  title: string
+  createdAt?: number
+  updatedAt?: number
+  modelType?: DeepSeekModelType
+}
+
+export interface DeepSeekRemoteSessionPage {
+  items: DeepSeekRemoteSessionSummary[]
+  nextCursor?: string
+}
+
+export interface DeepSeekRemoteMessage {
+  role: 'user' | 'assistant'
+  requestMessageId?: string
+  responseMessageId?: string
+  text: string
+  reasoning?: string
+  citations?: DeepSeekCitation[]
+  createdAt?: number
+  modelType?: DeepSeekModelType
+  thinkingEnabled?: boolean
+  searchEnabled?: boolean
+}
+
+export interface DeepSeekRemoteSessionHistory {
+  session: DeepSeekRemoteSessionSummary
+  messages: DeepSeekRemoteMessage[]
+  nextCursor?: string
+}
+
 export interface PowChallenge {
   algorithm: string
   challenge: string
@@ -112,4 +144,13 @@ export interface DeepSeekWebClient {
   complete(request: DeepSeekCompletionRequest): Promise<DeepSeekTurn>
   solveCompletionPow?(credential: string, signal?: AbortSignal): Promise<string>
   uploadAttachment?(request: DeepSeekAttachmentUpload): Promise<DeepSeekAttachmentRef>
+  listSessions(
+    credential: string,
+    options?: { cursor?: string; limit?: number; signal?: AbortSignal },
+  ): Promise<DeepSeekRemoteSessionPage>
+  fetchSessionHistory(
+    credential: string,
+    chatSessionId: string,
+    options?: { cursor?: string; limit?: number; signal?: AbortSignal },
+  ): Promise<DeepSeekRemoteSessionHistory>
 }
