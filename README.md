@@ -10,24 +10,27 @@
 [![release](https://img.shields.io/github/v/release/y-wi/dsh-deepseek-web?color=0f172a)](https://github.com/y-wi/dsh-deepseek-web/releases)
 [![license](https://img.shields.io/github/license/y-wi/dsh-deepseek-web?color=334155)](./LICENSE)
 [![node](https://img.shields.io/node/v/dsh-deepseek-web?color=1e293b)](https://nodejs.org)
-
-**开源 TypeScript 集成层** · 预编译 WASM 协议核心  
-
 <h3>
-请严格遵循相关使用政策，禁止将此项目用于反代等破坏系统正常运行的行为，仅限个人学习使用
-  
+请严格遵循相关使用规定，禁止将此项目用于反代等破坏系统正常运行的行为<br><br>由于网页端本身不具备工具调用的能力，采用提示词注入，工具调用存在不稳定的情况，不建议长期使用
+<br><br>本项目基于网页端会话机制运行，交互过程中产生的消息会同步记录至网页端历史会话。<br>频繁使用会增加历史记录数量，影响原有会话管理体验。<br>当前属于早期版本，仍存在许多未知缺陷和漏洞，请谨慎使用
 </h3>
-
+<h2>
+仅限个人学习使用
+</h2>
 <h3>
-<em>想快速构建一个属于你的智能体？试试 <a href="https://github.com/aifluxon/aifluxon">AIFLUXON</a>：可嵌入的 Agent runtime，支持 Rust二次开发并提供 Python API，快速将AI接入现有程序，统一处理流式输出、工具、审批、会话、取消与预算，适合 AI 应用、Coding Agent、CLI 与自定义 Host。</em>
 </h3>
-
+<h4>
+  非官方 Provider。本仓库开放 Harness 集成层与传输层
+</h4>
+<p>
+  协议兼容由随包分发的预编译 WebAssembly 提供
+</p>
+<h3>
+本项目核心能力来源于未开源的测试项目，核心代码的迁移工作由人工智能完成<br>
+代码的可靠性和可维护性暂不做保障
+</h3>
 </div>
 
-
-非官方 Provider。本仓库开放 Harness **集成层与传输层**；协议兼容由随包分发的预编译 WebAssembly 提供。
-
-本项目与 DeepSeek **无隶属或背书关系**。使用你自己的 DeepSeek 账号。插件不会绕过 CAPTCHA、WAF 或账号访问控制；交互式验证在隔离浏览器窗口中完成。
 
 ## 安装
 
@@ -72,38 +75,38 @@ dsh plugin --profile web exec dsh-deepseek-web login --token-stdin
 <table>
 <tr>
 <td>
-<img src="docs/assets/showcase-login.gif" alt="设置中用隔离浏览器登录 DeepSeek Web" width="720">
 <p><b>隔离浏览器登录。</b> 用独立浏览器登录 <code>chat.deepseek.com</code>，不读取日常 Chrome / Edge 配置。凭证只保存在 DSH 存储中。</p>
+<img src="docs/assets/showcase-login.gif" alt="设置中用隔离浏览器登录 DeepSeek Web" width="720">
 </td>
 </tr>
 <tr>
 <td>
-<img src="docs/assets/showcase-switch.gif" alt="在输入栏切换 DeepSeek Web 模型与 DeepThink 推理等级" width="720">
 <p><b>切换模型。</b> 可在 <code>DeepSeek Web</code> 与 <code>DeepSeek Web Expert</code> 之间切换，并选择 DeepThink 推理等级。底部显示当轮耗时与首 token 延迟。</p>
+<img src="docs/assets/showcase-switch.gif" alt="在输入栏切换 DeepSeek Web 模型与 DeepThink 推理等级" width="720">
 </td>
 </tr>
 <tr>
 <td>
-<img src="docs/assets/showcase-list.gif" alt="侧栏浮层列出 DeepSeek Web 网页会话" width="720">
 <p><b>网页会话列表。</b> 侧栏底部打开浮层，列出 DeepSeek 网页端上的会话，可刷新与滚动加载。</p>
+<img src="docs/assets/showcase-list.gif" alt="侧栏浮层列出 DeepSeek Web 网页会话" width="720">
 </td>
 </tr>
 <tr>
 <td>
-<img src="docs/assets/showcase-load.gif" alt="从浮层打开网页会话并在 Harness 中接续" width="720">
 <p><b>接续网页会话。</b> 点选一条会话后在 Harness 里打开；replay 有效时续写原来的网页会话。导入时只保留用户原文。</p>
+<img src="docs/assets/showcase-load.gif" alt="从浮层打开网页会话并在 Harness 中接续" width="720">
 </td>
 </tr>
 <tr>
 <td>
+<p><b>派生到工作区。</b> 把 DeepSeek 网页端的会话，本地已有会话，从任意位置开始，派生到你选择的任意工作区。</p>
 <img src="docs/assets/showcase-fork.gif" alt="把助手消息派生到选定工作区后独立续聊" width="720">
-<p><b>派生到工作区。</b> 把 DeepSeek 网页端的会话派生到你选择的工作区。派生后的会话不写回原来的网页会话。</p>
 </td>
 </tr>
 <tr>
 <td>
+<p><b><code>/clean</code></b> 使用该命令后，后续每一轮只发送你的原文（不含系统提示、工具、skills），可配合接续聊天接近网页端效果。再执行一次则关闭。<br>当前还未实现解析联网搜索后的来源链接，将在后续改进</p>
 <img src="docs/assets/showcase-clean.gif" alt="使用斜杠命令 /clean 只发送用户原文" width="720">
-<p><b><code>/clean</code>。</b> 会话开关。打开后后续每一轮只发送你的原文（不含系统提示、工具、skills），可配合接续聊天接近网页端效果。再执行一次关闭。</p>
 </td>
 </tr>
 </table>
@@ -111,7 +114,7 @@ dsh plugin --profile web exec dsh-deepseek-web login --token-stdin
 | 能力 | 说明 |
 | --- | --- |
 | DSH 原生工具 | 将 DeepSeek 网页端接入 Harness；插件把模型输出转成工具请求。FS / Shell / MCP / 审批由 Harness 执行 |
-| 网页搜索 | 始终开启官方网页端 Web Search；Expert 不能搜；不是 DSH `web_search` |
+| 网页搜索 | 始终开启官方网页端 Web Search|
 | 预构建 WASM | 安装无需 Rust / wasm-pack；token 与 cookie **不进入** WASM |
 
 详见 [docs/remote-sessions.md](./docs/remote-sessions.md)。
