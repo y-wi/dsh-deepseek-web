@@ -75,58 +75,50 @@ dsh plugin --profile web exec dsh-deepseek-web login --token-stdin
 
 <table>
 <tr>
-<td valign="top" width="50%">
-<img src="docs/assets/showcase-session.png" alt="DeepSeek Web 会话：DeepThink 规划后由 DSH Glob 列出工作区目录" width="420">
-<p><b>会话与工具调用。</b> DeepThink 只做规划；<code>Glob</code> 由 DeepSeek Harness 执行。插件把模型输出转成工具请求，自己不跑文件系统。</p>
-</td>
-<td valign="top" width="50%">
-<img src="docs/assets/showcase-settings.png" alt="设置：DeepSeek Web 隔离浏览器登录、状态与诊断" width="420">
+<td>
+<img src="docs/assets/showcase-login.gif" alt="设置中用隔离浏览器登录 DeepSeek Web" width="720">
 <p><b>隔离浏览器登录。</b> 用独立浏览器登录 <code>chat.deepseek.com</code>，不读取日常 Chrome / Edge 配置。凭证只保存在 DSH 存储中。</p>
 </td>
 </tr>
 <tr>
-<td valign="top" width="50%">
-<img src="docs/assets/showcase-composer.png" alt="输入栏：DeepSeek Web 与 DeepThink 推理等级" width="420">
-<p><b>模型与 DeepThink。</b> 可切换 <code>DeepSeek Web</code> / <code>DeepSeek Web Expert</code>，以及推理等级。底部为当轮耗时与首 token 延迟。</p>
-</td>
-<td valign="top" width="50%">
-<img src="docs/assets/showcase-clean.png" alt="斜杠命令 /clean：只发送用户原文" width="420">
-<p><b><code>/clean</code>。</b> 会话开关。打开后后续每一轮只发送你的原文（不含系统提示、工具、skills）。再执行一次关闭。</p>
+<td>
+<img src="docs/assets/showcase-switch.gif" alt="在输入栏切换 DeepSeek Web 模型与 DeepThink 推理等级" width="720">
+<p><b>切换模型。</b> 可在 <code>DeepSeek Web</code> 与 <code>DeepSeek Web Expert</code> 之间切换，并选择 DeepThink 推理等级。底部显示当轮耗时与首 token 延迟。</p>
 </td>
 </tr>
 <tr>
-<td valign="top" width="50%">
-<img src="docs/assets/showcase-web-sessions.png" alt="侧栏浮层列出 DeepSeek Web 网页会话，可刷新与滚动加载" width="360">
-<p><b>网页会话浮层。</b> 侧栏底部列出 chat.deepseek.com 上的会话；点选后在 Harness 里打开，replay 有效时续写原来的网页会话。</p>
-</td>
-<td valign="top" width="50%">
-<img src="docs/assets/showcase-workspace.png" alt="导入后的会话落在 DeepSeek Chat 工作区" width="360">
-<p><b>DeepSeek Chat 工作区。</b> 打开的网页会话落在插件数据目录对应的工作区，可按 Harness 会话列表继续浏览。</p>
+<td>
+<img src="docs/assets/showcase-list.gif" alt="侧栏浮层列出 DeepSeek Web 网页会话" width="720">
+<p><b>网页会话列表。</b> 侧栏底部打开浮层，列出 DeepSeek 网页端上的会话，可刷新与滚动加载。</p>
 </td>
 </tr>
 <tr>
-<td valign="top" width="50%">
-<img src="docs/assets/showcase-fork.png" alt="助手消息上的派生到工作区操作" width="420">
-<p><b>派生到工作区。</b> 在已完成的助手消息上，把历史裁到该轮，复制到你选择的工作区。</p>
+<td>
+<img src="docs/assets/showcase-load.gif" alt="从浮层打开网页会话并在 Harness 中接续" width="720">
+<p><b>接续网页会话。</b> 点选一条会话后在 Harness 里打开；replay 有效时续写原来的网页会话。导入时只保留用户原文。</p>
 </td>
-<td valign="top" width="50%">
-<img src="docs/assets/showcase-fork-picker.png" alt="派生到工作区时选择目标工作区；回答中带网页搜索引用" width="420">
-<p><b>独立续聊与网页搜索。</b> 派生后的会话不写回原来的网页会话。<code>default</code> 始终开启官方 Web Search，引用来源出现在时间线上。</p>
+</tr>
+<tr>
+<td>
+<img src="docs/assets/showcase-fork.gif" alt="把助手消息派生到选定工作区后独立续聊" width="720">
+<p><b>派生到工作区。</b> 把 DeepSeek 网页端的会话派生到你选择的工作区。派生后的会话不写回原来的网页会话。</p>
+</td>
+</tr>
+<tr>
+<td>
+<img src="docs/assets/showcase-clean.gif" alt="使用斜杠命令 /clean 只发送用户原文" width="720">
+<p><b><code>/clean</code>。</b> 会话开关。打开后后续每一轮只发送你的原文（不含系统提示、工具、skills），可配合接续聊天接近网页端效果。再执行一次关闭。</p>
 </td>
 </tr>
 </table>
 
 | 能力 | 说明 |
 | --- | --- |
-| 浏览器登录 | 隔离 `--user-data-dir`，不碰日常浏览器 profile |
-| DSH 原生工具 | 文本工具桥 → `ToolCallBlock`；FS / Shell / MCP / 审批由 Harness 执行 |
-| 会话回放 | 在 DSH 会话中续聊并重建远端上下文 |
-| 网页会话 | 侧栏浮层列出 DeepSeek Web 会话；派生到工作区后独立续聊 |
-| 网页搜索 | `default` 始终开启官方 Web Search；Expert 不能搜；不是 DSH `web_search` |
-| `/clean` | 会话开关：打开后只发送用户原文 |
+| DSH 原生工具 | 将 DeepSeek 网页端接入 Harness；插件把模型输出转成工具请求。FS / Shell / MCP / 审批由 Harness 执行 |
+| 网页搜索 | 始终开启官方网页端 Web Search；Expert 不能搜；不是 DSH `web_search` |
 | 预构建 WASM | 安装无需 Rust / wasm-pack；token 与 cookie **不进入** WASM |
 
-导入时只保留用户原文。详见 [docs/remote-sessions.md](./docs/remote-sessions.md)。
+详见 [docs/remote-sessions.md](./docs/remote-sessions.md)。
 
 ## 架构
 
