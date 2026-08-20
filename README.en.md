@@ -11,10 +11,6 @@
 [![license](https://img.shields.io/github/license/y-wi/dsh-deepseek-web?color=334155)](./LICENSE)
 [![node](https://img.shields.io/node/v/dsh-deepseek-web?color=1e293b)](https://nodejs.org)
 
-<p>
-  <img src="docs/assets/overview.png" alt="Architecture overview: browser login, DSH tool calls, session replay, and a prebuilt WASM core" width="920">
-</p>
-
 **Open TypeScript integration layer** · precompiled WASM protocol core  
 
 <h3>

@@ -11,10 +11,6 @@
 [![license](https://img.shields.io/github/license/y-wi/dsh-deepseek-web?color=334155)](./LICENSE)
 [![node](https://img.shields.io/node/v/dsh-deepseek-web?color=1e293b)](https://nodejs.org)
 
-<p>
-  <img src="docs/assets/overview.png" alt="dsh-deepseek-web 架构总览：浏览器登录、DSH 工具调用、会话回放与预构建 WASM 核心" width="920">
-</p>
-
 **开源 TypeScript 集成层** · 预编译 WASM 协议核心  
 
 <h3>
