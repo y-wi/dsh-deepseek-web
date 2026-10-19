@@ -1,6 +1,6 @@
 /** Duck-typed Harness persistence and workspace seams. Official packages stay optional peers. */
 
-export const SESSION_FORMAT_VERSION = 0
+export const SESSION_FORMAT_VERSION = 4
 
 export interface SessionHeaderLike {
   version: number
@@ -9,6 +9,7 @@ export interface SessionHeaderLike {
   cwd?: string
   parentSession?: string
   seedLength?: number
+  isSeeded?: boolean
   origin?: 'subagent'
   agentPreset?: string
 }
@@ -89,7 +90,7 @@ export interface AgentRegistryLike {
   get(id: string): AgentHandleLike | undefined
   resume(options: {
     resumeSessionId: string
-    setup?: (agentCtx: AgentSetupContextLike) => unknown
+    setup?: (agentCtx: AgentSetupContextLike, agent?: AgentHandleLike) => unknown
   }): Promise<{ agent: AgentHandleLike }>
 }
 

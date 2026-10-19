@@ -34,41 +34,26 @@
 
 ## 安装
 
-需要 DeepSeek Harness **0.1.0-rc.7**（或兼容版本），Node `^22.19.0 || >=24.0.0`。
+适配 DeepSeek Harness **0.2.1-rc.2** 的 Desktop、Web 和 TUI。旧版 0.1 宿主请使用插件 1.0.x。
+
+### Desktop / Web 界面安装
+
+打开 **插件 → 添加插件**，粘贴以下链接，安装后点击 **立即启用**：
+
+```text
+https://github.com/y-wi/dsh-deepseek-web/releases/download/v1.1.0/dsh-deepseek-web-1.1.0.tgz
+```
+
+进入 **插件 → DeepSeek Web → 使用 DeepSeek 登录**，在打开的浏览器窗口完成登录。原有的 **设置 → DeepSeek Web** 入口仍可使用。
+
+### 命令行
 
 ```bash
-dsh plugin --profile web add dsh-deepseek-web
-dsh plugin --profile web peers check
+dsh plugin --profile web add https://github.com/y-wi/dsh-deepseek-web/releases/download/v1.1.0/dsh-deepseek-web-1.1.0.tgz
 dsh web
 ```
 
-设置 → DeepSeek Web → Sign in with DeepSeek。确认 Provider `deepseek-web` 出现，模型 `default` / `expert` 可见。
-
-DSH / Cordis / React 由运行时 `$DSH_HOME/profiles/node_modules` 提供，不会在插件目录再装一份。
-
-<details>
-<summary>TUI、CLI 与更新</summary>
-
-```bash
-dsh plugin --profile dsh-tui add dsh-deepseek-web
-dsh-tui
-```
-
-```bash
-dsh plugin --profile web exec dsh-deepseek-web status
-dsh plugin --profile web exec dsh-deepseek-web login
-dsh plugin --profile web update dsh-deepseek-web
-```
-
-无界面回退（不能替代浏览器登录）：
-
-```bash
-dsh plugin --profile web exec dsh-deepseek-web login --token-stdin
-```
-
-完整说明见 [INSTALL.md](./INSTALL.md)。
-
-</details>
+TUI 改用 `--profile tui` 安装，再运行 `dsh tui`。从 1.0.x 更新时，在界面先卸载旧插件，再安装上述链接并启用；登录凭据和会话会保留。完整说明见 [INSTALL.md](./INSTALL.md)。
 
 ## 能力
 

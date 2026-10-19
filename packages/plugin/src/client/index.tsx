@@ -1,9 +1,15 @@
-import type { ClientContext, HarnessWorkspacesLike } from '@deepseek-ai/dsh-client-runtime/client'
+import type { Context as ClientContext } from '@deepseek-ai/cordis'
+import type { HarnessWorkspacesLike } from './host-types.ts'
+import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
+import type {} from '@deepseek-ai/dsh-api-session-controller/client'
+import type {} from '@deepseek-ai/dsh-api-workspace-controller/client'
+import type {} from '@deepseek-ai/dsh-client-ui-workspace/client'
+import type {} from '@deepseek-ai/dsh-client-ui-plugin-manager/client'
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 import type {} from '@deepseek-ai/dsh-client-ui-slots'
 import type {} from '@deepseek-ai/dsh-client-ui-sidebar/client'
-import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
+import type {} from '@deepseek-ai/dsh-client-ui-chat/client'
 import { DeepSeekWebSettings } from './DeepSeekWebSettings.tsx'
 import type { DeepSeekWebSettingsInjected } from './DeepSeekWebSettings.tsx'
 import { DeepSeekSidebarAction } from './DeepSeekSidebarAction.tsx'
@@ -28,7 +34,7 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
 }
 
 export const name = 'dsh-deepseek-web-client'
-export const inject = ['slots', 'locale', 'sessions', 'workspaces']
+export const inject = ['slots', 'locale', 'sessions', 'workspaces', 'uiWorkspace']
 
 function workspaceChoices(workspaces: HarnessWorkspacesLike | undefined): WorkspaceChoice[] {
   const items = workspaces?.list?.getSnapshot()?.items ?? []
@@ -48,7 +54,15 @@ export function apply(ctx: ClientContext): void {
   const namespace = 'settings.deepseek-web'
   ctx.effect(() => ctx.locale.register(namespace, { zh, en }), 'dsh-deepseek-web: settings copy')
   const t = ctx.locale.bind(namespace) as DeepSeekWebSettingsInjected['t']
-  const openSession = (sessionId: string) => openHarnessSession(ctx.sessions, sessionId)
+  const openSession = (sessionId: string) => openHarnessSession(ctx.sessions, sessionId, {
+    navigate: id => ctx.uiWorkspace.openSession(id),
+  })
+
+  ctx.slots.inject('plugins.bundle.config', () => ctx.slots.register({
+    name: 'plugins.bundle.config',
+    key: 'dsh-deepseek-web',
+    inject: (): DeepSeekWebSettingsInjected => ({ t }),
+  }, DeepSeekWebSettings))
 
   ctx.slots.inject('settings.section', () => ctx.slots.register({
     name: 'settings.section',

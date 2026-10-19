@@ -49,7 +49,7 @@ describe('packaging invariants', () => {
     expect(pkg.dsh?.plugin).toBe(true)
     expect(pkg.dsh?.kind).toBe('server')
     expect(pkg.dsh?.client?.inject).toContain('@deepseek-ai/dsh-client-ui-sidebar')
-    expect(pkg.dsh?.client?.inject).toContain('@deepseek-ai/dsh-client-ui-conversation')
+    expect(pkg.dsh?.client?.inject).toContain('@deepseek-ai/dsh-client-ui-chat')
     expect(pkg.disclosure?.cloud).toBe(true)
     expect(pkg.disclosure?.offlineMode).toBe(false)
     expect(pkg.disclosure?.network).toContain('https://chat.deepseek.com')

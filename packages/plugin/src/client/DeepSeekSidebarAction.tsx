@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
 import type { CSSProperties, KeyboardEvent } from 'react'
-import { IconQueueOutline14, useDismissOnOutsidePointer } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconQueueOutlineRegular, useDismissOnOutsidePointer } from '@deepseek-ai/dsh-client-ui-primitives'
 import {
   MENU_REFRESH,
   MENU_RETRY,
@@ -185,7 +185,7 @@ export function DeepSeekSidebarAction(props: DeepSeekSidebarActionProps): JSX.El
         }}
       >
         <span className="dsw-web-sessions-icon" aria-hidden>
-          <IconQueueOutline14 size={wide ? 14 : 18} />
+          <IconQueueOutlineRegular size={wide ? 14 : 18} />
         </span>
         {wide ? <span className="dsw-web-sessions-label">{t('sessionsAction')}</span> : null}
       </button>

@@ -1,4 +1,4 @@
-import type { HarnessSessionsLike } from '@deepseek-ai/dsh-client-runtime/client'
+import type { HarnessSessionsLike } from './host-types.ts'
 
 export function sessionIsListed(sessions: HarnessSessionsLike | undefined, sessionId: string): boolean {
   const snapshot = sessions?.list?.getSnapshot?.()
@@ -14,11 +14,12 @@ export async function waitForListedSession(
   sessionId: string,
   options?: { timeoutMs?: number; signal?: AbortSignal },
 ): Promise<void> {
-  if (sessions === undefined || typeof sessions.open !== 'function') {
+  if (sessions === undefined) {
     throw new Error('Harness sessions are unavailable')
   }
   const timeoutMs = options?.timeoutMs ?? 8_000
   const deadline = Date.now() + timeoutMs
+  if (options?.signal?.aborted) throw new Error('cancelled')
   const listed = () => sessionIsListed(sessions, sessionId)
   if (listed()) return
   await sessions.refresh?.()
@@ -63,8 +64,15 @@ export async function waitForListedSession(
 export async function openHarnessSession(
   sessions: HarnessSessionsLike | undefined,
   sessionId: string,
-  options?: { timeoutMs?: number; signal?: AbortSignal },
+  options?: { timeoutMs?: number; signal?: AbortSignal; navigate?: (id: string) => void },
 ): Promise<void> {
   await waitForListedSession(sessions, sessionId, options)
-  sessions!.open(sessionId)
+  if (options?.signal?.aborted) throw new Error('cancelled')
+  if (options?.navigate !== undefined) options.navigate(sessionId)
+  else {
+    // Older embedders can still supply their own navigation on the controller.
+    const legacy = sessions as HarnessSessionsLike & { open?: (id: string) => void }
+    if (typeof legacy.open !== 'function') throw new Error('Harness navigation is unavailable')
+    legacy.open(sessionId)
+  }
 }

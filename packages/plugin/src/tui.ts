@@ -11,8 +11,8 @@ export function apply(ctx: Context): void {
     injected.commands.register({
       name: 'deepseek-web',
       description: 'DeepSeek Web login and diagnostics',
-      handler: async (invocation: { text?: string }): Promise<CommandResult> => {
-        const action = (invocation.text ?? 'status').trim().split(/\s+/)[0]
+      handler: async (invocation: { rawInput?: string; text?: string }): Promise<CommandResult> => {
+        const action = (invocation.rawInput ?? invocation.text ?? 'status').trim().split(/\s+/)[0]
         const service = ctx.deepSeekWeb as DeepSeekWebService
         if (action === 'login') return { kind: 'success', text: `DeepSeek Web: ${(await service.login({ resetProfile: true })).status}` }
         if (action === 'logout') {

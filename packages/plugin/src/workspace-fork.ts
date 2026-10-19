@@ -171,7 +171,7 @@ async function findExistingFork(
       && !excludeIds.has(header.id)
       && header.parentSession === sourceSessionId
       && header.cwd === cwd
-      && header.seedLength === seedLength
+      && (header.seedLength === seedLength || (header.seedLength === undefined && header.isSeeded === true))
     )
     .sort((left, right) => right.createdAt - left.createdAt)
     .slice(0, MAX_FORK_INSPECT)
@@ -193,7 +193,9 @@ async function forkMatches(
     return existing.meta.parentSession === sourceSessionId
       && existing.meta.cwd === cwd
       && existing.meta.seedLength === seedLength
-      && existing.events.length === seedLength
+      && (existing.events.length === seedLength
+        || (existing.events.length === seedLength + 1
+          && existing.events[seedLength]?.type === 'session/end-seed'))
   } catch {
     return false
   }

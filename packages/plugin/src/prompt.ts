@@ -105,7 +105,7 @@ function formatMessage(message: PromptMessage): string {
     return buildExchange(message.toolCalls ?? [], message.toolResults)
   }
   if (message.role === 'assistant') return wrapTag('assistant', message.text)
-  if (message.role === 'system' || message.sourceKind === 'plugin') {
+  if (message.role === 'system' || message.role === 'developer' || message.sourceKind === 'plugin') {
     return wrapTag('dsh_context', message.text)
   }
   const userText = stripHarnessInjections(message.text)

@@ -1,5 +1,5 @@
 import type { MenuEntry } from '@deepseek-ai/dsh-client-ui-primitives'
-import { IconRefreshOutline16 } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconRefreshOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { DeepSeekWebSettingsKey } from './locales.ts'
 import type { RemoteSessionsState } from './remote-session-types.ts'
 
@@ -49,7 +49,7 @@ export function sessionMenuEntries(
     footer.push({
       id: MENU_REFRESH,
       label: t('sessionsRefresh'),
-      icon: <IconRefreshOutline16 />,
+      icon: <IconRefreshOutlineRegular />,
     })
   }
 

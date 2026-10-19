@@ -58,6 +58,8 @@ declare module '@deepseek-ai/dsh-llm' {
 
 declare module '@deepseek-ai/cordis' {
   export interface Context {
+    fiber: { entry?: { options: { id: string } } }
+    settings: { configure(presentation: { auto: boolean }, owner?: unknown): () => void }
     llm: {
       registerConfigurableProviders(entries: unknown[]): unknown
       registerAdapter(providers: string[], adapter: unknown): { replace(providers: string[]): void }
@@ -76,6 +78,11 @@ declare module '@deepseek-ai/cordis' {
       }): () => void
     }
     invariants: { register(name: string, install: unknown): () => void }
+    locale: { register(ns: string, packs: unknown): () => void; bind(ns: string): (key: string) => string }
+    slots: { inject(name: string, factory: () => unknown): void; register(slot: unknown, component: unknown): unknown }
+    sessions?: import('./client/host-types.ts').HarnessSessionsLike
+    workspaces?: import('./client/host-types.ts').HarnessWorkspacesLike
+    uiWorkspace: { openSession(id: string): void }
     deepSeekWeb?: unknown
   }
 }
@@ -99,16 +106,7 @@ declare module '@deepseek-ai/dsh-home-paths' {
   export function resolveDshHome(configured?: string): string
 }
 
-declare module '@deepseek-ai/dsh-settings' {
-  export function settingsNamespace(name: string): string
-  export function installSettingsSection(
-    ctx: unknown,
-    ns: string,
-    schema: unknown,
-    entry: unknown,
-    hooks: { setSource(current: () => unknown): void; onChange(): void },
-  ): void
-}
+declare module '@deepseek-ai/dsh-settings' {}
 
 declare module '@deepseek-ai/dsh-invariants' {
   export type InvariantInstaller = () => void
@@ -137,45 +135,6 @@ declare module '@deepseek-ai/dsh-attachment' {
   }
 }
 
-declare module '@deepseek-ai/dsh-client-runtime/client' {
-  export interface ClientContext {
-    effect(fn: () => unknown, name: string): void
-    locale: {
-      register(ns: string, packs: unknown): () => void
-      bind(ns: string): (key: string) => string
-    }
-    slots: {
-      inject(name: string, factory: () => unknown): void
-      register(slot: unknown, component: unknown): unknown
-    }
-    sessions?: HarnessSessionsLike
-    workspaces?: HarnessWorkspacesLike
-  }
-
-  export interface HarnessSessionsLike {
-    open(id: string): void
-    refresh?(): Promise<void>
-    list?: {
-      getSnapshot(): {
-        ids?: string[]
-        byId?: Record<string, unknown>
-        items?: Array<{ id?: string }>
-      }
-      subscribe?(fn: () => void): () => void
-    }
-  }
-
-  export interface HarnessWorkspacesLike {
-    refresh?(): Promise<void>
-    list?: {
-      getSnapshot(): {
-        items?: Array<{ workspaceId?: string; id?: string; title?: string; path?: string }>
-      }
-      subscribe?(fn: () => void): () => void
-    }
-  }
-}
-
 declare module '@deepseek-ai/dsh-client-ui-primitives' {
   import type { ButtonHTMLAttributes, ReactNode, RefObject } from 'react'
   export function Button(props: {
@@ -195,9 +154,9 @@ declare module '@deepseek-ai/dsh-client-ui-primitives' {
     label: string
     side?: 'top' | 'right' | 'bottom' | 'left'
   }): JSX.Element
-  export function IconFolderOpenOutline16(props?: { size?: number; className?: string }): JSX.Element
-  export function IconQueueOutline14(props?: { size?: number; className?: string }): JSX.Element
-  export function IconRefreshOutline16(props?: { size?: number; className?: string }): JSX.Element
+  export function IconFolderOpenOutlineRegular(props?: { size?: number; className?: string }): JSX.Element
+  export function IconQueueOutlineRegular(props?: { size?: number; className?: string }): JSX.Element
+  export function IconRefreshOutlineRegular(props?: { size?: number; className?: string }): JSX.Element
   export function useDismissOnOutsidePointer(
     root: RefObject<HTMLElement | null>,
     open: boolean,
@@ -233,7 +192,7 @@ declare module '@deepseek-ai/dsh-client-ui-primitives' {
 declare module '@deepseek-ai/dsh-client-ui-settings/client' {}
 declare module '@deepseek-ai/dsh-client-locale/client' {}
 declare module '@deepseek-ai/dsh-client-ui-sidebar/client' {}
-declare module '@deepseek-ai/dsh-client-ui-conversation/client' {}
+declare module '@deepseek-ai/dsh-client-ui-chat/client' {}
 declare module '@deepseek-ai/dsh-client-ui-slots' {
   export interface LocaleNamespaceMap {}
 }
@@ -242,3 +201,12 @@ declare module '@puppeteer/browsers' {
   export function install(options: unknown): Promise<unknown>
   export function computeExecutablePath(options: unknown): string
 }
+
+declare module '@deepseek-ai/dsh-session/fork' {
+  export function buildForkSeed(events: readonly unknown[], boundary: number): unknown[]
+}
+declare module '@deepseek-ai/dsh-client-ui-renderer/client' {}
+declare module '@deepseek-ai/dsh-api-session-controller/client' {}
+declare module '@deepseek-ai/dsh-api-workspace-controller/client' {}
+declare module '@deepseek-ai/dsh-client-ui-workspace/client' {}
+declare module '@deepseek-ai/dsh-client-ui-plugin-manager/client' {}

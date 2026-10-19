@@ -57,14 +57,24 @@ export function toolCallBlocks(content: unknown): Array<{ id: string; name: stri
 
 export function toolResultFromMessage(message: unknown): { id: string; content: unknown; isError: boolean } | undefined {
   const record = message as {
+    role?: string
+    toolCallId?: string
+    isError?: boolean
     source?: { kind?: string; callId?: string }
     content?: unknown
   }
-  if (record.source?.kind !== 'tool') return undefined
+  if (record.role !== 'tool' && record.source?.kind !== 'tool') return undefined
+  if (record.role === 'tool' && typeof record.toolCallId === 'string') {
+    return {
+      id: record.toolCallId,
+      content: record.content,
+      isError: record.isError === true,
+    }
+  }
   const block = Array.isArray(record.content) ? record.content[0] : record.content
   const typed = block as { type?: string; id?: string; content?: unknown; isError?: boolean; toolCallId?: string }
   return {
-    id: String(typed?.id ?? typed?.toolCallId ?? record.source.callId ?? ''),
+    id: String(typed?.id ?? typed?.toolCallId ?? record.source?.callId ?? ''),
     content: typed?.content ?? record.content,
     isError: Boolean(typed?.isError),
   }

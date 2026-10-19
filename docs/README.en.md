@@ -31,41 +31,27 @@ This project is **not affiliated with or endorsed by DeepSeek**. Users sign in w
 
 ## Install
 
-Requires DeepSeek Harness **0.1.0-rc.7** (or compatible) and Node `^22.19.0 || >=24.0.0`.
+Requires DeepSeek Harness **0.2.1-rc.2** (Desktop, Web, or TUI). For the older 0.1 runtime, use plugin 1.0.x.
+
+### Desktop / Web UI
+
+Open **Plugins → Add plugin**, paste this link, install, then choose **Enable now**:
+
+```text
+https://github.com/y-wi/dsh-deepseek-web/releases/download/v1.1.0/dsh-deepseek-web-1.1.0.tgz
+```
+
+Open **Plugins → DeepSeek Web → Sign in with DeepSeek** and complete sign-in in the browser window. **Settings → DeepSeek Web** remains available.
+
+### Command line
 
 ```bash
-dsh plugin --profile web add dsh-deepseek-web
-dsh plugin --profile web peers check
+dsh plugin --profile web add https://github.com/y-wi/dsh-deepseek-web/releases/download/v1.1.0/dsh-deepseek-web-1.1.0.tgz
 dsh web
 ```
 
-Settings → DeepSeek Web → Sign in with DeepSeek. Confirm provider `deepseek-web` and models `default` / `expert`.
+For TUI, install into `--profile tui` and launch `dsh tui`. To update from 1.0.x, remove the old plugin in the UI, install the link above, and enable it. Saved credentials and conversations are kept. See [INSTALL.md](./INSTALL.md).
 
-DSH / Cordis / React come from `$DSH_HOME/profiles/node_modules`. They are not duplicated under the plugin package.
-
-<details>
-<summary>TUI, CLI, and updates</summary>
-
-```bash
-dsh plugin --profile dsh-tui add dsh-deepseek-web
-dsh-tui
-```
-
-```bash
-dsh plugin --profile web exec dsh-deepseek-web status
-dsh plugin --profile web exec dsh-deepseek-web login
-dsh plugin --profile web update dsh-deepseek-web
-```
-
-Headless fallback (not a substitute for browser login):
-
-```bash
-dsh plugin --profile web exec dsh-deepseek-web login --token-stdin
-```
-
-See [INSTALL.md](./INSTALL.md) for the full notes.
-
-</details>
 
 ## Capabilities
 

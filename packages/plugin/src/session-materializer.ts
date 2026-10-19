@@ -186,6 +186,7 @@ export function buildRemoteSessionSeed(input: {
       turn: turnNumber,
       step: 1,
       message: assistantMessage,
+      stream: [],
     }, { surfaceOp: 'append', time: stamp })
     push('step/end', { turn: turnNumber, step: 1 }, { time: stamp })
     push('turn/end', { turn: turnNumber, reason: { kind: 'completed' } }, { time: stamp })

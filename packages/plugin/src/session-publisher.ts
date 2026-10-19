@@ -41,11 +41,11 @@ export async function ensureHarnessSessionAttached(input: {
   try {
     const handle = await agents.resume({
       resumeSessionId: sessionId,
-      setup: async (agentCtx: AgentSetupContextLike) => {
+      setup: async (agentCtx: AgentSetupContextLike, agent) => {
         installMirrorCwdVariable(
           agentCtx.systemPrompt,
           cwd,
-          agentCtx.agent?.session.header?.cwd,
+          (agent ?? agentCtx.agent)?.session.header?.cwd,
         )
         await input.agentPresets?.mount(agentCtx, input.agentPreset)
       },
