@@ -108,11 +108,14 @@ function semanticFrame(message: unknown): string {
     role?: string
     source?: { kind?: string }
     content?: unknown
+    toolCallId?: string
+    isError?: boolean
   }
   return framed([
     record.role ?? '',
     record.source?.kind ?? '',
     contentFrame(record.content),
+    ...(record.role === 'tool' ? [record.toolCallId ?? '', String(record.isError === true)] : []),
   ])
 }
 

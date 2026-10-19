@@ -104,7 +104,12 @@ function formatMessage(message: PromptMessage): string {
   if (message.toolResults && message.toolResults.length > 0) {
     return buildExchange(message.toolCalls ?? [], message.toolResults)
   }
-  if (message.role === 'assistant') return wrapTag('assistant', message.text)
+  if (message.role === 'assistant') {
+    const calls = message.toolCalls?.length
+      ? `<dsh_tool_calls>${JSON.stringify({ version: 1, calls: message.toolCalls })}</dsh_tool_calls>`
+      : ''
+    return wrapTag('assistant', [message.text, calls].filter(Boolean).join('\n'))
+  }
   if (message.role === 'system' || message.role === 'developer' || message.sourceKind === 'plugin') {
     return wrapTag('dsh_context', message.text)
   }

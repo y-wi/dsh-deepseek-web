@@ -38,7 +38,7 @@ Requires DeepSeek Harness **0.2.1-rc.2** (Desktop, Web, or TUI). For the older 0
 Open **Plugins → Add plugin**, paste this link, install, then choose **Enable now**:
 
 ```text
-https://github.com/y-wi/dsh-deepseek-web/releases/download/v1.1.0/dsh-deepseek-web-1.1.0.tgz
+https://github.com/y-wi/dsh-deepseek-web/releases/download/v1.1.1/dsh-deepseek-web-1.1.1.tgz
 ```
 
 Open **Plugins → DeepSeek Web → Sign in with DeepSeek** and complete sign-in in the browser window. **Settings → DeepSeek Web** remains available.
@@ -46,7 +46,7 @@ Open **Plugins → DeepSeek Web → Sign in with DeepSeek** and complete sign-in
 ### Command line
 
 ```bash
-dsh plugin --profile web add https://github.com/y-wi/dsh-deepseek-web/releases/download/v1.1.0/dsh-deepseek-web-1.1.0.tgz
+dsh plugin --profile web add https://github.com/y-wi/dsh-deepseek-web/releases/download/v1.1.1/dsh-deepseek-web-1.1.1.tgz
 dsh web
 ```
 

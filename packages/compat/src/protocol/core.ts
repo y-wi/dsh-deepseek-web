@@ -303,7 +303,7 @@ function rethrowWasm(error: unknown): never {
       throw new DeepSeekWebError(
         parsed.error.safeMessage,
         parsed.error.dshCode,
-        parsed.error.status === undefined ? undefined : { status: parsed.error.status },
+        parsed.error.status == null ? undefined : { status: parsed.error.status },
       )
     }
   } catch (inner) {

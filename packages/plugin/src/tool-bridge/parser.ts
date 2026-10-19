@@ -23,7 +23,9 @@ export const EASYPHY_OPEN = '<easyphy_tool_calls>'
 export const EASYPHY_CLOSE = '</easyphy_tool_calls>'
 const DSML_OPEN = '<||DSML||'
 const DSML_FULLWIDTH_OPEN = '<｜DSML｜'
-const XML_INVOKE_OPEN = '<invoke name='
+const DSML_DOUBLE_FULLWIDTH_OPEN = '<｜｜DSML｜｜'
+const DSML_SINGLE_OPEN = '<|DSML|'
+const XML_INVOKE_OPEN = '<invoke'
 const MARKED_BLOCKS = [
   ['<dsh_tool_calls>', '</dsh_tool_calls>'],
   ['<easyphy_tool_calls>', '</easyphy_tool_calls>'],
@@ -37,8 +39,29 @@ const TEXT_PROTOCOL_OPEN_MARKERS = [
   ...MARKED_BLOCKS.map(([open]) => open),
   DSML_OPEN,
   DSML_FULLWIDTH_OPEN,
+  DSML_DOUBLE_FULLWIDTH_OPEN,
+  DSML_SINGLE_OPEN,
   XML_INVOKE_OPEN,
 ] as const
+
+/** Protocol delimiters inside a JSON string are file/command data. */
+function markedBodyEnd(content: string, start: number, close: string): number {
+  if (!/^[\s]*[\[{]/.test(content.slice(start))) return content.indexOf(close, start)
+  let quoted = false
+  let escaped = false
+  for (let index = start; index < content.length; index++) {
+    const char = content[index]
+    if (quoted) {
+      if (escaped) escaped = false
+      else if (char === '\\') escaped = true
+      else if (char === '"') quoted = false
+    } else {
+      if (content.startsWith(close, index)) return index
+      if (char === '"') quoted = true
+    }
+  }
+  return -1
+}
 
 export function shouldBufferAsToolProtocol(text: string, hasTools: boolean): boolean {
   if (!hasTools) return false
@@ -53,9 +76,9 @@ export function extractMarkedToolSlice(content: string): string | undefined {
     if (start < 0) continue
     if (insideFence(content, start)) continue
     const bodyStart = start + open.length
-    const relativeEnd = content.slice(bodyStart).indexOf(close)
-    if (relativeEnd < 0) continue
-    const slice = content.slice(start, bodyStart + relativeEnd + close.length)
+    const end = markedBodyEnd(content, bodyStart, close)
+    if (end < 0) continue
+    const slice = content.slice(start, end + close.length)
     if (best === undefined || start < best.start) best = { start, slice }
   }
   return best?.slice
@@ -74,18 +97,40 @@ export function resolveToolProtocol(
     if (content === undefined || content.trim().length === 0) return { kind: 'none' }
     const strict = parseToolProtocol(content, allowedTools, options)
     if (strict.kind === 'calls') return strict
-    const slice = extractMarkedToolSlice(content)
-    if (slice !== undefined && slice !== content.trim()) {
+    // Recover a preamble/trailer or consecutive complete blocks as one batch.
+    // Validate every block before returning any calls; never execute a valid prefix.
+    let rest = content
+    const calls: BridgeToolCall[] = []
+    let bytes = 0
+    while (true) {
+      const slice = extractMarkedToolSlice(rest)
+      if (slice === undefined) break
+      const prefix = rest.slice(0, rest.indexOf(slice))
+      if (TEXT_PROTOCOL_OPEN_MARKERS.some(marker => prefix.includes(marker))) return strict
       const extracted = parseToolProtocol(slice, allowedTools, options)
-      if (extracted.kind === 'calls') return extracted
+      if (extracted.kind !== 'calls') return extracted
+      bytes += Buffer.byteLength(slice, 'utf8')
+      calls.push(...extracted.calls)
+      if (bytes > options.maxBytes || calls.length > options.maxCalls) {
+        return { kind: 'invalid', reason: 'tool protocol batch exceeds limits' }
+      }
+      rest = rest.slice(rest.indexOf(slice) + slice.length)
+    }
+    if (calls.length > 0 && !TEXT_PROTOCOL_OPEN_MARKERS.some(marker => rest.includes(marker))) {
+      return { kind: 'calls', calls: calls.map((call, index) => ({
+        ...call, id: toolCallId(options.responseMessageId, index, call.name, call.arguments),
+      })) }
     }
     return strict
   }
   const fromText = tryParse(channels.text)
-  if (fromText.kind === 'calls') return fromText
+  if (fromText.kind !== 'none') return fromText
+  // Thinking may quote source files, protocol examples, or abandoned drafts.
+  // A completed answer takes precedence over those incidental markers.
+  if (channels.text.trim().length > 0) return fromText
   const fromReasoning = tryParse(channels.reasoning)
   if (fromReasoning.kind === 'calls') return fromReasoning
-  return fromText.kind !== 'none' ? fromText : fromReasoning
+  return fromReasoning
 }
 
 export function visibleTextBeforeToolProtocol(text: string, hasTools: boolean): string {
@@ -187,12 +232,10 @@ function parseMarkedBlock(
     return undefined
   }
   if (insideFence(content, start)) return { kind: 'invalid', reason: 'tool protocol must not be fenced' }
-  if (content.slice(start + open.length).includes(open)) return { kind: 'invalid', reason: 'multiple open markers' }
   const bodyStart = start + open.length
-  const relativeEnd = content.slice(bodyStart).indexOf(close)
-  if (relativeEnd < 0) return { kind: 'invalid', reason: 'tool protocol missing close marker' }
-  const bodyEnd = bodyStart + relativeEnd
-  if (bodyEnd - bodyStart > maxBytes) return { kind: 'invalid', reason: 'tool protocol exceeds size limit' }
+  const bodyEnd = markedBodyEnd(content, bodyStart, close)
+  if (bodyEnd < 0) return { kind: 'invalid', reason: 'tool protocol missing close marker' }
+  if (Buffer.byteLength(content.slice(bodyStart, bodyEnd), 'utf8') > maxBytes) return { kind: 'invalid', reason: 'tool protocol exceeds size limit' }
   if (content.slice(bodyEnd + close.length).trim().length > 0) {
     return { kind: 'invalid', reason: 'text after tool protocol' }
   }
@@ -207,6 +250,9 @@ function parseMarkedBlock(
       } catch {
         /* XML invoke bodies can contain CSS braces; fall through. */
       }
+    }
+    if (/^[\[{]/.test(raw)) {
+      return { kind: 'invalid', reason: `invalid tool protocol JSON: ${String(error)}` }
     }
     const xml = parseInvokes(raw, allowed, maxCalls, responseMessageId)
     if (xml !== undefined) return xml
@@ -256,11 +302,11 @@ function callsFromJson(
 }
 
 function stripDsml(content: string): string {
-  return content
-    .replaceAll('<||DSML||', '<')
-    .replaceAll('</||DSML||', '</')
-    .replaceAll('<｜DSML｜', '<')
-    .replaceAll('</｜DSML｜', '</')
+  return content.replace(/<(\/?)[|｜]{1,2}DSML[|｜]{1,2}[\t ]*/g, '<$1')
+}
+
+function attribute(attributes: string, name: string): string | undefined {
+  return attributes.match(new RegExp(`(?:^|\\s)${name}\\s*=\\s*["']([^"']*)["']`, 'i'))?.[1]
 }
 
 function parseParamValue(raw: string): unknown {
@@ -280,11 +326,11 @@ export function parseInvokes(
   responseMessageId: string,
 ): ParsedToolProtocol | undefined {
   const normalized = stripDsml(content)
-  if (!/<invoke\s+name=/i.test(normalized)) return undefined
+  if (!/<invoke\b/i.test(normalized)) return undefined
   const calls: BridgeToolCall[] = []
   let rest = normalized
   while (true) {
-    const match = rest.match(/<invoke\s+name=["']([^"']+)["'][^>]*>/i)
+    const match = rest.match(/<invoke\b([^>]*)>/i)
     if (match === null || match.index === undefined) break
     rest = rest.slice(match.index + match[0].length)
     const closeMatch = rest.match(/<\/invoke>/i)
@@ -293,22 +339,28 @@ export function parseInvokes(
     }
     const body = rest.slice(0, closeMatch.index)
     rest = rest.slice(closeMatch.index + closeMatch[0].length)
-    const name = match[1]!.trim()
+    const name = attribute(match[1]!, 'name')?.trim() ?? ''
     if (name.length === 0) return { kind: 'invalid', reason: `call ${calls.length + 1} has empty name` }
     if (!allowed.has(name)) return { kind: 'invalid', reason: `tool ${name} is not allowed` }
     const args: Record<string, unknown> = {}
     let paramRest = body
     while (true) {
-      const param = paramRest.match(/<parameter\s+name=["']([^"']+)["'][^>]*>/i)
+      const param = paramRest.match(/<parameter\b([^>]*)>/i)
       if (param === null || param.index === undefined) break
+      if (paramRest.slice(0, param.index).trim().length > 0) return { kind: 'invalid', reason: `tool ${name} has malformed parameters` }
+      const paramName = attribute(param[1]!, 'name')
+      if (!paramName || Object.hasOwn(args, paramName)) return { kind: 'invalid', reason: `tool ${name} has missing or duplicate parameter names` }
       paramRest = paramRest.slice(param.index + param[0].length)
       const pCloseMatch = paramRest.match(/<\/parameter>/i)
       if (pCloseMatch === null || pCloseMatch.index === undefined) {
-        return { kind: 'invalid', reason: `tool ${name} parameter ${param[1]} missing close tag` }
+        return { kind: 'invalid', reason: `tool ${name} parameter ${paramName} missing close tag` }
       }
-      args[param[1]!] = parseParamValue(paramRest.slice(0, pCloseMatch.index))
+      const raw = paramRest.slice(0, pCloseMatch.index)
+      const value = attribute(param[1]!, 'string')?.toLowerCase() === 'true' ? raw : parseParamValue(raw)
+      Object.defineProperty(args, paramName, { value, enumerable: true, configurable: true, writable: true })
       paramRest = paramRest.slice(pCloseMatch.index + pCloseMatch[0].length)
     }
+    if (paramRest.trim().length > 0) return { kind: 'invalid', reason: `tool ${name} has malformed parameters` }
     calls.push({
       id: toolCallId(responseMessageId, calls.length, name, args),
       name,
@@ -316,6 +368,7 @@ export function parseInvokes(
     })
   }
   if (calls.length === 0) return { kind: 'invalid', reason: 'invoke marker without a complete call' }
+  if (/<(?:invoke|parameter)\b/i.test(rest)) return { kind: 'invalid', reason: 'tool invoke has an incomplete trailing call' }
   if (calls.length > maxCalls) return { kind: 'invalid', reason: 'too many tool calls' }
   return { kind: 'calls', calls }
 }
@@ -326,9 +379,10 @@ export function parseDsml(
   maxCalls: number,
   responseMessageId: string,
 ): ParsedToolProtocol | undefined {
-  const normalized = content.replaceAll('｜', '|')
-  if (!normalized.includes('<||DSML||tool_calls>') && !normalized.includes('<||DSML||invoke')) return undefined
-  return parseInvokes(normalized, allowed, maxCalls, responseMessageId)
+  const marker = content.search(/<[|｜]{1,2}DSML[|｜]{1,2}/)
+  if (marker < 0) return undefined
+  if (insideFence(content, marker)) return { kind: 'invalid', reason: 'tool protocol must not be fenced' }
+  return parseInvokes(content, allowed, maxCalls, responseMessageId)
     ?? { kind: 'invalid', reason: 'DSML marker without invokes' }
 }
 
@@ -338,16 +392,25 @@ export function parseToolProtocol(
   options: { maxBytes: number; maxCalls: number; responseMessageId: string },
 ): ParsedToolProtocol {
   const allowed = new Set(allowedTools)
-  for (const [open, close] of MARKED_BLOCKS) {
+  // The outermost protocol owns its payload. An alias mentioned inside a
+  // string argument must never override that enclosing call.
+  const marked = MARKED_BLOCKS.filter(([open]) => content.includes(open))
+    .sort(([a], [b]) => content.indexOf(a) - content.indexOf(b))
+  const markedAt = marked.length ? content.indexOf(marked[0]![0]) : Infinity
+  const dsmlAt = content.search(/<[|｜]{1,2}DSML[|｜]{1,2}/)
+  const invokeAt = content.search(/<invoke\b/i)
+  if (dsmlAt >= 0 && dsmlAt < markedAt && (invokeAt < 0 || dsmlAt < invokeAt)) {
+    if (Buffer.byteLength(content, 'utf8') > options.maxBytes) return { kind: 'invalid', reason: 'tool protocol exceeds size limit' }
+    return parseDsml(content, allowed, options.maxCalls, options.responseMessageId)!
+  }
+  if (invokeAt >= 0 && invokeAt < markedAt) {
+    if (insideFence(content, invokeAt)) return { kind: 'invalid', reason: 'tool protocol must not be fenced' }
+    if (Buffer.byteLength(content, 'utf8') > options.maxBytes) return { kind: 'invalid', reason: 'tool protocol exceeds size limit' }
+    return parseInvokes(content, allowed, options.maxCalls, options.responseMessageId)!
+  }
+  for (const [open, close] of marked.length ? marked : MARKED_BLOCKS) {
     const parsed = parseMarkedBlock(content, open, close, allowed, options.maxBytes, options.maxCalls, options.responseMessageId)
     if (parsed) return parsed
-  }
-  const dsml = parseDsml(content, allowed, options.maxCalls, options.responseMessageId)
-  if (dsml) return dsml
-  const stripped = stripDsml(content).trimStart()
-  if (/^<invoke\s+name=/i.test(stripped)) {
-    const xml = parseInvokes(content, allowed, options.maxCalls, options.responseMessageId)
-    if (xml) return xml
   }
   return { kind: 'none' }
 }

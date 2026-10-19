@@ -1,4 +1,4 @@
-# Install dsh-deepseek-web 1.1.0
+# Install dsh-deepseek-web 1.1.1
 
 Requires DeepSeek Harness **0.2.1-rc.2**, including Desktop, Web and TUI. Plugin 1.0.x targets the earlier 0.1 runtime. CLI installations need Node `^22.19.0 || >=24.0.0`; Desktop supplies its own runtime and package manager.
 
@@ -10,7 +10,7 @@ Requires DeepSeek Harness **0.2.1-rc.2**, including Desktop, Web and TUI. Plugin
 4. Open **Plugins → DeepSeek Web → Sign in with DeepSeek**. Complete sign-in on chat.deepseek.com in the dedicated browser window.
 
 ```text
-https://github.com/y-wi/dsh-deepseek-web/releases/download/v1.1.0/dsh-deepseek-web-1.1.0.tgz
+https://github.com/y-wi/dsh-deepseek-web/releases/download/v1.1.1/dsh-deepseek-web-1.1.1.tgz
 ```
 
 The `.tgz` installs the prebuilt plugin with its WASM. No Git clone, Rust compiler, local build or build-script approval is needed. Use the tarball link in the install field; the GitHub repository page contains the source workspace.
@@ -20,12 +20,12 @@ The `.tgz` installs the prebuilt plugin with its WASM. No Git clone, Rust compil
 ## Command line
 
 ```bash
-dsh plugin --profile web add https://github.com/y-wi/dsh-deepseek-web/releases/download/v1.1.0/dsh-deepseek-web-1.1.0.tgz
+dsh plugin --profile web add https://github.com/y-wi/dsh-deepseek-web/releases/download/v1.1.1/dsh-deepseek-web-1.1.1.tgz
 dsh web
 ```
 
 ```bash
-dsh plugin --profile tui add https://github.com/y-wi/dsh-deepseek-web/releases/download/v1.1.0/dsh-deepseek-web-1.1.0.tgz
+dsh plugin --profile tui add https://github.com/y-wi/dsh-deepseek-web/releases/download/v1.1.1/dsh-deepseek-web-1.1.1.tgz
 dsh tui
 ```
 

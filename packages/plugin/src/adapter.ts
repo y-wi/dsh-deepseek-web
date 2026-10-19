@@ -184,6 +184,7 @@ class StreamSink {
     this.reasoningFed = this.reasoning.length
     this.citations = []
     this.gate = new CitationStreamGate()
+    this.receivedDelta = false
   }
 
   finish(calls: BridgeToolCall[], replay: DeepSeekWebReplayV1): void {
@@ -433,7 +434,7 @@ export class DeepSeekWebAdapter extends LlmAdapter {
         : buildIncrementalPrompt({
           toolsUpdate: plan.contractUpdate?.tools ? tools : undefined,
           systemUpdate: plan.contractUpdate?.system ? options.system : undefined,
-          delta: toPromptMessages(plan.deltaMessages, config.maxToolResultBytes),
+          delta: toPromptMessages(plan.deltaMessages, config.maxToolResultBytes, options.messages),
           nativeSearch,
         })
     } else {
@@ -550,6 +551,9 @@ export class DeepSeekWebAdapter extends LlmAdapter {
       })
       if (parsed.kind === 'calls') return { turn: { ...turn, text: '' }, calls: parsed.calls }
       if (parsed.kind === 'none') {
+        if (turn.text.trim().length === 0 && turn.reasoning.trim().length === 0) {
+          throw new LlmError('DeepSeek Web returned an empty response', ERROR_CODES.PROTOCOL_INCOMPLETE)
+        }
         const promisedSource = turn.text.trim().length > 0 ? turn.text : turn.reasoning
         if (
           !input.sink.streamedVisible
@@ -564,7 +568,6 @@ export class DeepSeekWebAdapter extends LlmAdapter {
         }
         return { turn, calls: [] }
       }
-      if (input.sink.streamedVisible) return { turn, calls: [] }
       input.sink.resetBufferedText()
       parent = turn.responseMessageId
       prompt = repairPrompt(parsed.reason, input.nativeSearch)
@@ -662,17 +665,28 @@ function lastHumanUserText(messages: readonly unknown[]): string {
   return ''
 }
 
-function toPromptMessages(messages: readonly unknown[], maxToolResultBytes: number): PromptMessage[] {
+function toPromptMessages(messages: readonly unknown[], maxToolResultBytes: number, history: readonly unknown[] = messages): PromptMessage[] {
   const out: PromptMessage[] = []
+  const knownCalls = new Map<string, BridgeToolCall>()
+  for (const message of history) {
+    const content = (message as { content?: unknown }).content
+    for (const call of toolCallBlocks(content)) {
+      knownCalls.set(call.id, { id: call.id, name: call.name, arguments: JSON.parse(call.arguments || '{}') as Record<string, unknown> })
+    }
+  }
   for (const message of messages) {
     const result = toolResultFromMessage(message)
     if (result) {
-      out.push({
-        role: 'tool',
-        sourceKind: 'tool',
-        text: '',
-        toolResults: [projectToolResult(result.id, result.content, result.isError, maxToolResultBytes)],
-      })
+      const call = knownCalls.get(result.id)
+      const projected = projectToolResult(result.id, result.content, result.isError, maxToolResultBytes)
+      if (call !== undefined) projected.name = call.name
+      let exchange = out.at(-1)
+      if (exchange?.role !== 'tool') {
+        exchange = { role: 'tool', sourceKind: 'tool', text: '', toolCalls: [], toolResults: [] }
+        out.push(exchange)
+      }
+      if (call !== undefined && !exchange.toolCalls!.some(item => item.id === call.id)) exchange.toolCalls!.push(call)
+      exchange.toolResults!.push(projected)
       continue
     }
     const record = message as { role?: string; content?: unknown; source?: { kind?: string } }

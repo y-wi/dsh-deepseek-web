@@ -41,7 +41,7 @@
 打开 **插件 → 添加插件**，粘贴以下链接，安装后点击 **立即启用**：
 
 ```text
-https://github.com/y-wi/dsh-deepseek-web/releases/download/v1.1.0/dsh-deepseek-web-1.1.0.tgz
+https://github.com/y-wi/dsh-deepseek-web/releases/download/v1.1.1/dsh-deepseek-web-1.1.1.tgz
 ```
 
 进入 **插件 → DeepSeek Web → 使用 DeepSeek 登录**，在打开的浏览器窗口完成登录。原有的 **设置 → DeepSeek Web** 入口仍可使用。
@@ -49,7 +49,7 @@ https://github.com/y-wi/dsh-deepseek-web/releases/download/v1.1.0/dsh-deepseek-w
 ### 命令行
 
 ```bash
-dsh plugin --profile web add https://github.com/y-wi/dsh-deepseek-web/releases/download/v1.1.0/dsh-deepseek-web-1.1.0.tgz
+dsh plugin --profile web add https://github.com/y-wi/dsh-deepseek-web/releases/download/v1.1.1/dsh-deepseek-web-1.1.1.tgz
 dsh web
 ```
 
